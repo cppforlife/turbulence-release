@@ -1,6 +1,6 @@
 # Turbulence
 
-Turbulence release is used for injecting different failure scenarios against a BOSH deployed system. Currently these scenarios are supported:
+Turbulence release is used for injecting different failure scenarios into a BOSH deployed system. Currently following scenarios are supported:
 
 - VM termination on BOSH supported IaaSes
 - impose CPU/RAM/IO load
