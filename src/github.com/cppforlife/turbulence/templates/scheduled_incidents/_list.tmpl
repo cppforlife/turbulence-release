@@ -1,0 +1,17 @@
+<h3 class="page-header">Scheduled Incidents</h3>
+
+{{ if .ScheduledIncidents }}
+  <ul class="list-group scheduled-incidents">
+    {{ range .ScheduledIncidents }}
+      <li class="list-group-item">
+        <p>
+          <span class="id"><a href="{{ .URL }}">{{ .ID }}</a></span>
+
+          <span class="schedule">{{ .Schedule }}</span>
+        </p>
+      </li>
+    {{ end }}
+  </ul>
+{{ else }}
+  <p class="empty">No scheduled incidents</p>
+{{ end }}

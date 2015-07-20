@@ -1,0 +1,25 @@
+<main>
+  <div class="container page-sep">
+    <div class="row">
+      <div class="col-md-12">
+        {{ with .Incident }}
+          <h3 class="page-header">Incident '{{ .ID }}'</h3>
+
+          <dl>
+            <dt>Tasks</dt>
+            <dd>{{ .TaskTypes }}</dd>
+
+            <dt>Time</dt>
+            <dd>{{ .ExecutionStartedAt }} &mdash; {{ .ExecutionCompletedAt }}</dd>
+          </dl>
+
+          <h4 class="page-header">Request</h4>
+
+          <pre class="incident-desc">{{ .Description }}</pre>
+
+          {{ template "incidents/_events_list" .Events }}
+        {{ end }}
+      </div>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,10 @@
+---
+name: turbulence
+
+dependencies:
+- golang
+
+files:
+- "**/*.go"
+- github.com/cppforlife/turbulence/public/**/*
+- github.com/cppforlife/turbulence/templates/**/*

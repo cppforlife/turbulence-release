@@ -1,0 +1,21 @@
+{{ if . }}
+  <h4 class="page-header">Events</h4>
+
+  <ul class="list-group incident-events">
+    {{ range . }}
+      <li class="list-group-item {{ if .IsAction }}{{ if .ExecutionCompletedAt }}list-group-item-success{{ else }}list-group-item-info{{ end }}{{ end }} {{ if .Error }}list-group-item-danger{{ end }}">
+        <p>
+          <span class="id">{{ .ID }}</span>
+          <span class="time">{{ .ExecutionStartedAt }} &mdash; {{ .ExecutionCompletedAt }}</span>
+          <span class="type">{{ .Type }}</span>
+          <span class="desc">{{ .DescriptionHTML }}</span>
+          {{ if not .ExecutionCompletedAt }}<i class="in-progress fa fa-fw fa-circle-o-notch fa-spin"></i>{{ end }}
+        </p>
+
+        {{ if .Error }}<pre>{{ .Error }}</pre>{{ end }}
+      </li>
+    {{ end }}
+  </ul>
+{{ else }}
+  <p class="empty">No events</p>
+{{ end }}

@@ -1,0 +1,32 @@
+---
+name: turbulence_agent
+
+templates:
+  ctl.erb: bin/ctl
+  ca_cert.erb: config/ca_cert
+  config.json.erb: config/config.json
+
+packages:
+- turbulence
+- stress
+- pid_utils
+
+properties:
+  turbulence_agent.api.host:
+    description: "Host of the API server"
+  turbulence_agent.api.port:
+    description: "Port of the API server"
+    default: 8080
+  turbulence_agent.api.ca_cert:
+    description: "CA certificate to use for connecting to the API server (uses system CA certificates by default)"
+    default: ""
+  turbulence_agent.api.username:
+    description: "Username for the API authentication"
+    default: "turbulence"
+  turbulence_agent.api.password:
+    description: "Password for the API authentication"
+    default: ""
+
+  turbulence_agent.debug:
+    description: "Show debug logs"
+    default: true

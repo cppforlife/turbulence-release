@@ -1,0 +1,68 @@
+---
+name: turbulence_api
+
+templates:
+  ctl.erb: bin/ctl
+  ca_cert.erb: config/ca_cert
+  config.json.erb: config/config.json
+  cert.pem.erb: config/cert.pem
+  private_key.pem.erb: config/private_key.pem
+
+packages:
+- turbulence
+- pid_utils
+
+properties:
+  turbulence_api.listen_address:
+    description: "Address to listen on"
+    default: "0.0.0.0"
+  turbulence_api.listen_port:
+    description: "Port to listen on"
+    default: 8080
+
+  turbulence_api.username:
+    description: "Username for the API authentication"
+    default: "turbulence"
+  turbulence_api.password:
+    description: "Password for the API authentication"
+
+  turbulence_api.certificate:
+    description: "API server certificate"
+  turbulence_api.private_key:
+    description: "API server private key"
+
+  # Director configuration
+  turbulence_api.director.host:
+    description: "Director host"
+    example: "192.168.50.4"
+  turbulence_api.director.port:
+    description: "Director port"
+    default: 25555
+  turbulence_api.director.ca_cert:
+    description: "CA certificate to verify Director certificate (uses system CA certificates by default)"
+    default: ""
+  turbulence_api.director.username:
+    description: "Director username"
+  turbulence_api.director.password:
+    description: "Director password"
+
+  turbulence_api.cpi_job_name:
+    description: "CPI job name that will be found in /var/vcap/jobs/X"
+    default: cpi
+
+  registry.host: {description: "Registry host"}
+  registry.port: {description: "Registry port"}
+  registry.username: {description: "Registry username"}
+  registry.password: {description: "Registry password"}
+
+  # Datadog reporting
+  turbulence_api.datadog.app_key:
+    description: "Datadog application key used for incident reporting"
+    default: ""
+  turbulence_api.datadog.api_key:
+    description: "Datadog API key"
+    default: ""
+
+  turbulence_api.debug:
+    description: "Show debug logs"
+    default: true

@@ -1,0 +1,124 @@
+body {
+  -webkit-font-smoothing: antialiased;
+  /* font: 17px "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif; */
+  font: 13px Menlo, Monaco, Consolas, "Courier New", monospace;
+  line-height: 1.5;
+  background: #fff;
+}
+
+strong { font-weight: 500; }
+
+.empty, .note {
+  font-style: italic;
+  color: #777;
+}
+
+/* Page links */
+a {
+  text-decoration: underline;
+  color: #333;
+}
+
+.dropdown a { text-decoration: none; }
+
+.btn { text-decoration: none; }
+
+/* Main */
+main {
+  padding-bottom: 30px;
+}
+
+/* Misc */
+pre, .prettyprint { border-width: 0; }
+
+.list-group-item {
+  border: 1px solid #ccc;
+  box-shadow: 0px -1px 8px 0px rgba(0,0,0,0.05);
+}
+
+.list-group-item .in-progress {
+  float: right;
+  line-height: 140%;
+}
+
+/* Scheduled incidents */
+.scheduled-incidents li > p {
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.scheduled-incidents .schedule {
+  float: left;
+  width: 150px;
+}
+
+/* Incidents */
+.incidents li > p {
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.incidents .time {
+  float: left;
+  width: 450px;
+}
+
+.incidents .type {
+  float: left;
+  width: 200px;
+  margin-right: 15px;
+}
+
+/* Incident events */
+.incident-desc { background: none; }
+
+.incident-events li {
+  overflow: hidden;
+  height: 15px; /* shrink */
+}
+
+.incident-events li.list-group-item-info,
+.incident-events li.list-group-item-success,
+.incident-events li.list-group-item-danger { height: auto; }
+
+.incident-events li > p {
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.incident-events li > pre {
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-size: 12px;
+}
+
+.incident-events .time {
+  float: left;
+  width: 450px;
+}
+
+.incident-events .type {
+  float: left;
+  width: 200px;
+  margin-right: 15px;
+}
+
+.incident-events .desc { float: left; }
+
+.incident-events .desc span { color: #aaa; }
+
+/* Id */
+.incidents .id,
+.incident-events .id,
+.scheduled-incidents .id {
+  float: left;
+  clear: left;
+  margin-right: 15px;
+}
+
+.incident-events .id {
+  width: 70px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,20 @@
+<main>
+  <div class="container page-sep">
+    <div class="row">
+      <div class="col-md-12">
+        {{ with .ScheduledIncident }}
+          <h3 class="page-header">Scheduled Incident '{{ .ID }}'</h3>
+
+          <dl>
+            <dt>Schedule</dt>
+            <dd>{{ .Schedule }}</dd>
+          </dl>
+
+          <h4 class="page-header">Request</h4>
+
+          <pre class="incident-desc">{{ .Description }}</pre>
+        {{ end }}
+      </div>
+    </div>
+  </div>
+</main>

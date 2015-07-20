@@ -1,0 +1,9 @@
+---
+golang/go1.4.2.src.tar.gz:
+  object_id: 255bc883-2e8b-464a-9124-6d0fb60186ce
+  sha: 460caac03379f746c473814a65223397e9c9a2f6
+  size: 10921896
+stress/stress-1.0.4.tar.gz:
+  object_id: 8c4a0c3b-348e-4367-8e2b-8c2742c5db79
+  sha: e1533bc704928ba6e26a362452e6db8fd58b1f0b
+  size: 191800

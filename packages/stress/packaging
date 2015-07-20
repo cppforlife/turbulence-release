@@ -1,0 +1,8 @@
+set -e -x
+
+tar xzf stress/stress-1.0.4.tar.gz
+
+cd stress-*
+./configure --prefix=${BOSH_INSTALL_TARGET}
+make
+make install

@@ -1,0 +1,5 @@
+check process turbulence_agent
+  with pidfile /var/vcap/sys/run/turbulence_agent/pid
+  start program "/var/vcap/jobs/turbulence_agent/bin/ctl start"
+  stop program "/var/vcap/jobs/turbulence_agent/bin/ctl stop"
+  group vcap

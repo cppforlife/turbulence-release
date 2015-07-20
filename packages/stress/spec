@@ -1,0 +1,5 @@
+---
+name: stress
+
+files:
+- stress/stress-1.0.4.tar.gz

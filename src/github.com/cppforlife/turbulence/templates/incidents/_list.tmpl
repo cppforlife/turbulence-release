@@ -1,0 +1,21 @@
+<h3 class="page-header">Incidents</h3>
+
+{{ if .Incidents }}
+  <ul class="list-group incidents">
+    {{ range .Incidents }}
+      <li class="list-group-item {{ if .ExecutionCompletedAt }}list-group-item-success{{ else }}list-group-item-info{{ end }} {{ if .HasEventErrors }}list-group-item-danger{{ end }}">
+        <p>
+          <span class="id"><a href="{{ .URL }}">{{ .ID }}</a></span>
+
+          <span class="time">{{ .ExecutionStartedAt }} &mdash; {{ .ExecutionCompletedAt }}</span>
+
+          <span class="type">{{ .TaskTypes }}</span>
+
+          {{ if not .ExecutionCompletedAt }}<i class="in-progress fa fa-fw fa-circle-o-notch fa-spin"></i>{{ end }}
+        </p>
+      </li>
+    {{ end }}
+  </ul>
+{{ else }}
+  <p class="empty">No incidents</p>
+{{ end }}

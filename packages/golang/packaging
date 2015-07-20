@@ -1,0 +1,11 @@
+set -e -x
+
+tar xzf golang/go1.4.2.src.tar.gz
+
+mv go/* $BOSH_INSTALL_TARGET
+
+cd $BOSH_INSTALL_TARGET/src
+
+export GOROOT_FINAL=$BOSH_INSTALL_TARGET
+
+./make.bash --no-clean

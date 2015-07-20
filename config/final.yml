@@ -1,0 +1,6 @@
+---
+final_name: turbulence
+blobstore:
+  provider: s3
+  options:
+    bucket_name: turbulence-blobs
