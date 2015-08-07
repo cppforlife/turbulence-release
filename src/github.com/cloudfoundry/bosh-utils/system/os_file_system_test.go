@@ -416,7 +416,7 @@ func init() {
 
 		Describe("Temporary directories and files", func() {
 			var (
-				osFs FileSystem
+				osFs        FileSystem
 				testTempDir string
 			)
 			BeforeEach(func() {
@@ -449,7 +449,7 @@ func init() {
 			})
 
 			Context("no temp root is set and was initialized as a strict temp root", func() {
-				BeforeEach(func () {
+				BeforeEach(func() {
 					osFs = NewOsFileSystemWithStrictTempRoot(boshlog.NewLogger(boshlog.LevelNone))
 				})
 

@@ -79,7 +79,7 @@ type FakeFileSystem struct {
 
 	WalkErr error
 
-	TempRootPath string
+	TempRootPath   string
 	strictTempRoot bool
 }
 
@@ -517,7 +517,7 @@ func (fs *FakeFileSystem) CopyDir(srcPath, dstPath string) error {
 }
 
 func (fs *FakeFileSystem) ChangeTempRoot(tempRootPath string) error {
-	if (fs.ChangeTempRootErr != nil){
+	if fs.ChangeTempRootErr != nil {
 		return fs.ChangeTempRootErr
 	}
 	fs.TempRootPath = tempRootPath

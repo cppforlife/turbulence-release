@@ -11,15 +11,15 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
-	"errors"
 )
 
 type osFileSystem struct {
-	logger boshlog.Logger
-	logTag string
-	tempRoot string
+	logger           boshlog.Logger
+	logTag           string
+	tempRoot         string
 	requiresTempRoot bool
 }
 
