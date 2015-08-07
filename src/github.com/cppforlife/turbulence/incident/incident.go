@@ -97,12 +97,18 @@ func (i Incident) executeOnDeployments() {
 					continue
 				}
 
+				actualInstanceIndices := []int{}
+
+				for _, actualInstance := range actualInstances {
+					actualInstanceIndices = append(actualInstanceIndices, actualInstance.Index)
+				}
+
 				event = i.Events.Add(Event{
 					Type:           EventTypeSelectInstances,
 					DeploymentName: depl.Name,
 					JobName:        actualJob.Name,
 				})
-				selectedIndices, err := job.SelectedIndices(len(actualInstances))
+				selectedIndices, err := job.SelectedIndices(actualInstanceIndices)
 				if event.MarkError(err) {
 					continue
 				}
@@ -110,19 +116,23 @@ func (i Incident) executeOnDeployments() {
 				i.logger.Debug(i.logTag, "Selected indices '%v' for job '%s'", selectedIndices, actualJob.Name)
 
 				for _, index := range selectedIndices {
-					actualInstance := actualInstances[index]
+					for _, actualInstance := range actualInstances {
+						if actualInstance.Index != index {
+							continue
+						}
 
-					eventTpl := Event{
-						DeploymentName: depl.Name,
-						JobName:        actualJob.Name,
-						JobIndex:       &actualInstance.Index,
-					}
+						eventTpl := Event{
+							DeploymentName: depl.Name,
+							JobName:        actualJob.Name,
+							JobIndex:       &actualInstance.Index,
+						}
 
-					// Ignore all other tasks if we are planning to kill the VM
-					if i.HasKillTask() {
-						i.killInstance(eventTpl, actualInstance)
-					} else {
-						i.executeTasks(eventTpl, actualInstance.AgentID)
+						// Ignore all other tasks if we are planning to kill the VM
+						if i.HasKillTask() {
+							i.killInstance(eventTpl, actualInstance)
+						} else {
+							i.executeTasks(eventTpl, actualInstance.AgentID)
+						}
 					}
 				}
 

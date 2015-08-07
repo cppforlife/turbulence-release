@@ -178,13 +178,17 @@ func (r EventResp) DescriptionHTML() template.HTML {
 	return template.HTML(strings.Join(descPieces, " "))
 }
 
-func (j Job) SelectedIndices(max int) ([]int, error) {
+// SelectedIndices returns a subset of availableIndices.
+func (j Job) SelectedIndices(availableIndices []int) ([]int, error) {
 	if len(j.Indices) > 0 {
 		var indices []int
 
 		for _, index := range j.Indices {
-			if index < max {
-				indices = append(indices, index)
+			for _, availableIndex := range availableIndices {
+				// Only return indices that are real
+				if index == availableIndex {
+					indices = append(indices, index)
+				}
 			}
 		}
 
@@ -222,7 +226,15 @@ func (j Job) SelectedIndices(max int) ([]int, error) {
 			return nil, bosherr.Errorf("Expected at most two integers in the limit '%s'", j.Limit)
 		}
 
-		return rand.Perm(max)[0:numOrPercent(n, max, hasPer)], nil
+		var indices []int
+
+		max := len(availableIndices)
+
+		for _, index := range rand.Perm(max)[0:numOrPercent(n, max, hasPer)] {
+			indices = append(indices, availableIndices[index])
+		}
+
+		return indices, nil
 	}
 
 	return nil, bosherr.Errorf("Expected indices or limit specified")
@@ -230,7 +242,11 @@ func (j Job) SelectedIndices(max int) ([]int, error) {
 
 func numOrPercent(n, max int, nIsPercent bool) int {
 	if nIsPercent {
-		return int(math.Ceil(float64(n) / 100.0 * float64(max)))
+		n = int(math.Ceil(float64(n) / 100.0 * float64(max)))
+	}
+
+	if n > max {
+		return max
 	}
 
 	return n
