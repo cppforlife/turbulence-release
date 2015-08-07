@@ -1,17 +1,13 @@
 {
 	"Tasks": [{
-		"Type": "stress",
-		"Timeout": "2m",
-
-		"NumCPUWorkers": 1,
-		"NumIOWorkers": 1
+		"Type": "kill"
 	}],
 
 	"Deployments": [{
 		"Name": "dummy",
 		"Jobs": [{
 			"Name": "dummy_z1",
-			"Limit": "0-50%"
+			"Indices": [0]
 		}]
 	}]
 }

@@ -1,7 +1,7 @@
 ---
 name: turbulence
 
-director_uuid: 1814d7a5-6a04-4201-adb1-d6e38cb4fb14
+director_uuid: 71d36859-4f21-446f-8a02-f18d7f1263c6
 
 releases:
 - {name: turbulence, version: latest}
@@ -72,6 +72,8 @@ properties:
     director:
       host: 192.168.50.4
       port: 25555
+      # Default bosh-lite's Director CA cert
+      # https://github.com/cloudfoundry/bosh-lite/blob/master/templates/bosh_lite_manifest_template.yml#L132
       ca_cert: |
         -----BEGIN CERTIFICATE-----
         MIIDtzCCAp+gAwIBAgIJAL+XoGqlINOLMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV

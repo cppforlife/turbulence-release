@@ -1,0 +1,73 @@
+---
+name: dummy
+
+director_uuid: 71d36859-4f21-446f-8a02-f18d7f1263c6
+
+releases:
+- {name: dummy, version: latest}
+
+networks:
+- name: default
+  subnets:
+<% (0..28).each_with_index do |i| %>
+  - range: 10.244.0.<%= i*4 %>/30
+    reserved:
+      - 10.244.0.<%= i*4 + 1 %>
+    static:
+      - 10.244.0.<%= i*4 + 2 %>
+    cloud_properties:
+      name: random
+<% end %>
+<% (29..61).each_with_index do |i| %>
+  - range: 10.244.0.<%= i*4 %>/30
+    reserved:
+      - 10.244.0.<%= i*4 + 1 %>
+    cloud_properties:
+      name: random
+<% end %>
+<% (62..63).each_with_index do |i| %>
+  - range: 10.244.0.<%= i*4 %>/30
+    reserved:
+      - 10.244.0.<%= i*4 + 1 %>
+    static:
+      - 10.244.0.<%= i*4 + 2 %>
+    cloud_properties:
+      name: random
+<% end %>
+
+resource_pools:
+- name: default
+  network: default
+  stemcell:
+    name: bosh-warden-boshlite-ubuntu-trusty-go_agent
+    version: latest
+  cloud_properties: {}
+
+jobs:
+- name: dummy_z1
+  templates:
+  - name: dummy
+  instances: 2
+  resource_pool: default
+  networks:
+  - name: default
+
+- name: dummy_z2
+  templates:
+  - name: dummy
+  instances: 1
+  resource_pool: default
+  networks:
+  - name: default
+
+compilation:
+  workers: 8
+  network: default
+  cloud_properties: {}
+
+update:
+  canaries: 0
+  serial: false
+  max_in_flight: 4
+  canary_watch_time: 1000-30000
+  update_watch_time: 1000-30000
