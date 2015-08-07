@@ -1,0 +1,40 @@
+---
+packages:
+- name: golang
+  version: ef57320bd339ba6a6bd37e0413980ea790fefa2d
+  fingerprint: ef57320bd339ba6a6bd37e0413980ea790fefa2d
+  sha1: 9f53afa9ab09de9386a2f9007c3cc92c164dd6b9
+  dependencies: []
+- name: pid_utils
+  version: abf4699dafe1f61a3ad9ea906552f963e42215a5
+  fingerprint: abf4699dafe1f61a3ad9ea906552f963e42215a5
+  sha1: 1288b5395230a92e592854aefb5de6ed13a18cdc
+  dependencies: []
+- name: stress
+  version: 527edc15abf5772bc822f320d6587b02ac0ee8c4
+  fingerprint: 527edc15abf5772bc822f320d6587b02ac0ee8c4
+  sha1: 79fc749d492d5213328df87f36d8ecddd4a57b4e
+  dependencies: []
+- name: turbulence
+  version: 0508957f2273361e5608ae2545ee1e4a0c9f8efe
+  fingerprint: 0508957f2273361e5608ae2545ee1e4a0c9f8efe
+  sha1: f8f304d68fdea78007840d021b8a7c5d00a92ab8
+  dependencies:
+  - golang
+jobs:
+- name: turbulence_agent
+  version: a384106ab55dd8a340e32f0a5152c23905feaeec
+  fingerprint: a384106ab55dd8a340e32f0a5152c23905feaeec
+  sha1: cc35cdccdf44f94ae6b67f7676ba96a1941456e3
+- name: turbulence_api
+  version: 442df2c7341e172f4198ce3795daf335c5ae507a
+  fingerprint: 442df2c7341e172f4198ce3795daf335c5ae507a
+  sha1: 0cd9d1ae38896b179e6f923cda23684f206cefbe
+license:
+  version: 20f5c57713d88e62da7ca2d033365f09d096cfb2
+  fingerprint: 20f5c57713d88e62da7ca2d033365f09d096cfb2
+  sha1: a7f1f52c4488e5682311b832842a4e09dd2d45e7
+commit_hash: 3f1db45a
+uncommitted_changes: true
+name: turbulence
+version: '0.2'
