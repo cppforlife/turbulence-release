@@ -49,10 +49,10 @@ properties:
     description: "CPI job name that will be found in /var/vcap/jobs/X"
     default: cpi
 
-  registry.host: {description: "Registry host"}
-  registry.port: {description: "Registry port"}
-  registry.username: {description: "Registry username"}
-  registry.password: {description: "Registry password"}
+  turbulence_api.registry.host: {description: "Registry host"}
+  turbulence_api.registry.port: {description: "Registry port"}
+  turbulence_api.registry.username: {description: "Registry username"}
+  turbulence_api.registry.password: {description: "Registry password"}
 
   # Datadog reporting
   turbulence_api.datadog.app_key:

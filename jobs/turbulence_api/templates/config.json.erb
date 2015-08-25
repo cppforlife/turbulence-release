@@ -31,12 +31,12 @@ if_p("turbulence_api.cpi_job_name") do |cpi_job_name|
 		"PackagesDir" => "/var/vcap/packages",
 	}
 
-	if_p("registry.host") do |host|
+	if_p("turbulence_api.registry.host") do |host|
 		params["Registry"] = {
 			"Host" => host,
-			"Port" => p("registry.port"),
-			"Username" => p("registry.username"),
-			"Password" => p("registry.password"),
+			"Port" => p("turbulence_api.registry.port"),
+			"Username" => p("turbulence_api.registry.username"),
+			"Password" => p("turbulence_api.registry.password"),
 		}
 	end
 end
