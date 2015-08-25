@@ -121,10 +121,12 @@ func (i Incident) executeOnDeployments() {
 							continue
 						}
 
+						idx := actualInstance.Index
+
 						eventTpl := Event{
 							DeploymentName: depl.Name,
 							JobName:        actualJob.Name,
-							JobIndex:       &actualInstance.Index,
+							JobIndex:       &idx,
 						}
 
 						// Ignore all other tasks if we are planning to kill the VM
