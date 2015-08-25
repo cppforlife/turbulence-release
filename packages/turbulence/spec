@@ -5,6 +5,7 @@ dependencies:
 - golang
 
 files:
+- pid_utils.sh
 - "**/*.go"
 - github.com/cppforlife/turbulence/public/**/*
 - github.com/cppforlife/turbulence/templates/**/*

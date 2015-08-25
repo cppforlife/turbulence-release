@@ -9,7 +9,6 @@ templates:
 packages:
 - turbulence
 - stress
-- pid_utils
 
 properties:
   turbulence_agent.api.host:

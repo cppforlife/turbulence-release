@@ -10,7 +10,6 @@ templates:
 
 packages:
 - turbulence
-- pid_utils
 
 properties:
   turbulence_api.listen_address:
