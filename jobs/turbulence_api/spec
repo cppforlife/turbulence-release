@@ -11,57 +11,66 @@ templates:
 packages:
 - turbulence
 
+provides:
+- name: api
+  type: turbulence_api
+  properties:
+  - listen_port
+  - ca_cert
+  - username
+  - password
+
 properties:
-  turbulence_api.listen_address:
+  listen_address:
     description: "Address to listen on"
     default: "0.0.0.0"
-  turbulence_api.listen_port:
+  listen_port:
     description: "Port to listen on"
     default: 8080
 
-  turbulence_api.username:
+  username:
     description: "Username for the API authentication"
     default: "turbulence"
-  turbulence_api.password:
+  password:
     description: "Password for the API authentication"
 
-  turbulence_api.certificate:
+  certificate:
     description: "API server certificate"
-  turbulence_api.private_key:
+  private_key:
     description: "API server private key"
+  ca_cert:
+    description: "API server CA certificate"
+    default: ""
 
-  # Director configuration
-  turbulence_api.director.host:
+  director.host:
     description: "Director host"
     example: "192.168.50.4"
-  turbulence_api.director.port:
+  director.port:
     description: "Director port"
     default: 25555
-  turbulence_api.director.ca_cert:
+  director.ca_cert:
     description: "CA certificate to verify Director certificate (uses system CA certificates by default)"
     default: ""
-  turbulence_api.director.username:
+  director.username:
     description: "Director username"
-  turbulence_api.director.password:
+  director.password:
     description: "Director password"
 
-  turbulence_api.cpi_job_name:
+  cpi_job_name:
     description: "CPI job name that will be found in /var/vcap/jobs/X"
-    default: cpi
 
-  turbulence_api.registry.host: {description: "Registry host"}
-  turbulence_api.registry.port: {description: "Registry port"}
-  turbulence_api.registry.username: {description: "Registry username"}
-  turbulence_api.registry.password: {description: "Registry password"}
+  registry.host: {description: "Registry host"}
+  registry.port: {description: "Registry port"}
+  registry.username: {description: "Registry username"}
+  registry.password: {description: "Registry password"}
 
-  # Datadog reporting
-  turbulence_api.datadog.app_key:
+  datadog.app_key:
     description: "Datadog application key used for incident reporting"
     default: ""
-  turbulence_api.datadog.api_key:
+  datadog.api_key:
     description: "Datadog API key"
     default: ""
 
-  turbulence_api.debug:
+  debug:
     description: "Show debug logs"
     default: true

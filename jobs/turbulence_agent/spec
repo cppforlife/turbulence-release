@@ -10,22 +10,11 @@ packages:
 - turbulence
 - stress
 
-properties:
-  turbulence_agent.api.host:
-    description: "Host of the API server"
-  turbulence_agent.api.port:
-    description: "Port of the API server"
-    default: 8080
-  turbulence_agent.api.ca_cert:
-    description: "CA certificate to use for connecting to the API server (uses system CA certificates by default)"
-    default: ""
-  turbulence_agent.api.username:
-    description: "Username for the API authentication"
-    default: "turbulence"
-  turbulence_agent.api.password:
-    description: "Password for the API authentication"
-    default: ""
+consumes:
+- name: api
+  type: turbulence_api
 
-  turbulence_agent.debug:
+properties:
+  debug:
     description: "Show debug logs"
     default: true

@@ -1,0 +1,12 @@
+---
+releases:
+- name: turbulence
+  version: "0.4+dev.4"
+
+addons:
+- name: turbulence_agent
+  jobs:
+  - name: turbulence_agent
+    release: turbulence
+    consumes:
+      api: {from: api, deployment: turbulence}

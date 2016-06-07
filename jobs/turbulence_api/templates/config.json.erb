@@ -1,42 +1,42 @@
 <%=
 
 params = {
-	"ListenAddress" => p("turbulence_api.listen_address"),
-	"ListenPort" => p("turbulence_api.listen_port"),
+	"ListenAddress" => p("listen_address"),
+	"ListenPort" => p("listen_port"),
 
-	"Username" => p("turbulence_api.username"),
-	"Password" => p("turbulence_api.password"),
+	"Username" => p("username"),
+	"Password" => p("password"),
 
 	"CertificatePath" => "/var/vcap/jobs/turbulence_api/config/cert.pem",
 	"PrivateKeyPath" => "/var/vcap/jobs/turbulence_api/config/private_key.pem",
 
 	"Director" => {
-		"Host" => p("turbulence_api.director.host"),
-		"Port" => p("turbulence_api.director.port"),
+		"Host" => p("director.host"),
+		"Port" => p("director.port"),
 		"CACert" => "", # todo
-		"Username" => p("turbulence_api.director.username"),
-		"Password" => p("turbulence_api.director.password"),
+		"Username" => p("director.username"),
+		"Password" => p("director.password"),
 	},
 
 	"Datadog" => {
-		"AppKey" => p("turbulence_api.datadog.app_key"),
-		"APIKey" => p("turbulence_api.datadog.api_key"),
+		"AppKey" => p("datadog.app_key"),
+		"APIKey" => p("datadog.api_key"),
 	},
 }
 
-if_p("turbulence_api.cpi_job_name") do |cpi_job_name|
+if_p("cpi_job_name") do |cpi_job_name|
 	params["CPI"] = {
 		"ExePath" => "/var/vcap/jobs/#{cpi_job_name}",
 		"JobsDir" => "/var/vcap/jobs",
 		"PackagesDir" => "/var/vcap/packages",
 	}
 
-	if_p("turbulence_api.registry.host") do |host|
+	if_p("registry.host") do |host|
 		params["Registry"] = {
 			"Host" => host,
-			"Port" => p("turbulence_api.registry.port"),
-			"Username" => p("turbulence_api.registry.username"),
-			"Password" => p("turbulence_api.registry.password"),
+			"Port" => p("registry.port"),
+			"Username" => p("registry.username"),
+			"Password" => p("registry.password"),
 		}
 	end
 end

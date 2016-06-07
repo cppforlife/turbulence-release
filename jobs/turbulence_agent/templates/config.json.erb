@@ -1,14 +1,16 @@
 <%=
 
+api = link("api")
+
 JSON.dump(
 	"AgentID" => "_agent_id_",
 
 	"API" => {
-		"Host" => p("turbulence_agent.api.host"),
-		"Port" => p("turbulence_agent.api.port"),
+		"Host" => api.instances.first.address,
+		"Port" => api.p("listen_port"),
 		"CACert" => "", # todo
-		"Username" => p("turbulence_agent.api.username"),
-		"Password" => p("turbulence_agent.api.password"),
+		"Username" => api.p("username"),
+		"Password" => api.p("password"),
 	},
 )
 

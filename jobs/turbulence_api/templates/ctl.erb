@@ -14,7 +14,7 @@ case $1 in
     mkdir -p $RUN_DIR $LOG_DIR
     chown -R vcap:vcap $RUN_DIR $LOG_DIR
 
-    <% if !p("turbulence_api.director.ca_cert").empty? %>
+    <% if !p("director.ca_cert").empty? %>
     # todo what's going on with golang's root ca?
     cert_path=/usr/local/share/ca-certificates/turbulence.crt
     cp /var/vcap/jobs/turbulence_api/config/ca_cert $cert_path
@@ -27,7 +27,7 @@ case $1 in
 
     exec chpst -u vcap:vcap /var/vcap/packages/turbulence/bin/api \
       -configPath=/var/vcap/jobs/turbulence_api/config/config.json \
-      <%= "-debug" if p("turbulence_api.debug") %> \
+      <%= "-debug" if p("debug") %> \
       1>>$LOG_DIR/stdout.log \
       2>>$LOG_DIR/stderr.log
 
