@@ -132,13 +132,13 @@ Example:
 
 ### Kill Process
 
-Kill one or more processes on the VM associated with an instance. It can 
+Kill one or more processes on the VM associated with an instance.
 
 One of the following configurations must be selected:
 
 - set `ProcessName` (string) to a pattern used with `pkill`
 - set `MonitoredProcessName` (string) to a name of one of the processes watched by Monit
-- nothing is set which results in a random monitored process killed
+- by default random monitored process is killed
 
 Example:
 
@@ -228,5 +228,27 @@ Example:
 	"Timeout": "10m", // Times may be suffixed with ms,s,m,h
 
 	"Delay": "50ms"
+}
+```
+
+### Shutdown
+
+Shuts down the VM associated with an instance.
+
+One of the following configurations must be selected:
+
+- set `Crash` (bool) to crash the system
+- set `Reboot` (bool) to nicely reboot the system
+- set `Sysrq` (string) to specify custom [system request](https://www.kernel.org/doc/Documentation/sysrq.txt)
+- by default system will be nicely powered off
+
+In addition you can set `Force` (bool) to forcefully reboot or power off.
+
+Example:
+
+```json
+{
+	"Type": "shutdown",
+	"Crash": true
 }
 ```

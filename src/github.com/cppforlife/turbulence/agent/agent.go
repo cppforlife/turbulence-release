@@ -108,6 +108,9 @@ func (a Agent) executeTask(task agentreqs.Task) {
 	case agentreqs.FirewallOptions:
 		t = agentreqs.NewFirewallTask(a.cmdRunner, opts, a.agentConfig.AllowedOutputDests(), a.logger)
 
+	case agentreqs.ShutdownOptions:
+		t = agentreqs.NewShutdownTask(a.cmdRunner, opts, a.logger)
+
 	default:
 		err = bosherr.Errorf("Unknown agent task '%T'", task.Optionss[0])
 		a.logger.Error(a.logTag, "Ignoring unknown agent task '%T'", task.Optionss[0])

@@ -61,6 +61,10 @@ func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
 				var o FirewallOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
+			case optType == "shutdown":
+				var o ShutdownOptions
+				err, opts = json.Unmarshal(bytes, &o), o
+
 			default:
 				err = bosherr.Errorf("Unknown task type '%s'", optType)
 			}
