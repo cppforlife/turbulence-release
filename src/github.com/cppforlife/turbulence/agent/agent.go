@@ -108,6 +108,9 @@ func (a Agent) executeTask(task agentreqs.Task) {
 	case agentreqs.FirewallOptions:
 		t = agentreqs.NewFirewallTask(a.cmdRunner, opts, a.agentConfig.AllowedOutputDests(), a.logger)
 
+	case agentreqs.FillDiskOptions:
+		t = agentreqs.NewFillDiskTask(a.cmdRunner, opts, a.logger)
+
 	case agentreqs.ShutdownOptions:
 		t = agentreqs.NewShutdownTask(a.cmdRunner, opts, a.logger)
 

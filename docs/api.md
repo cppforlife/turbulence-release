@@ -231,6 +231,26 @@ Example:
 }
 ```
 
+### Fill Disk
+
+Fill specific disk location on the VM associated with an instance.
+
+One of the following configurations must be selected:
+
+- set `Persistent` (bool) to fill up /var/vcap/store
+- set `Ephemeral` (bool) to fill up /var/vcap/data
+- set `Temporary` (bool) to fill up /tmp
+- by default uses root disk
+
+Example:
+
+```json
+{
+	"Type": "fill-disk",
+	"Persistent": true
+}
+```
+
 ### Shutdown
 
 Shuts down the VM associated with an instance.

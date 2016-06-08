@@ -10,7 +10,6 @@ Run `./update-deps` to update `github.com/cppforlife/turbulence` package depende
 
 - lock up whole machine
 - remount disk as readonly
-- fill up ephemeral/root/store disk
 - corrupt disks
 - pause a process
 - restrict X% bandw
