@@ -14,15 +14,6 @@ import (
 	"github.com/cppforlife/turbulence/agentreqs"
 )
 
-const (
-	IncidentTypeKill         = "kill"
-	IncidentTypeStress       = "stress"       // cpu, ram, io
-	IncidentTypeControlNet   = "control-net"  // drop X% of traffic, restrict X% bw, increase latency
-	IncidentTypeFillStorage  = "fill-storage" // fill up ephemeral/root/store disk
-	IncidentTypeKillProcess  = "kill-process"
-	IncidentTypePauseProcess = "pause-process"
-)
-
 type IncidentReq struct {
 	Tasks       agentreqs.TaskOptionsSlice
 	Deployments []Deployment

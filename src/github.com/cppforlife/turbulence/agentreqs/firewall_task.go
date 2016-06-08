@@ -43,7 +43,7 @@ func NewFirewallTask(
 func (t FirewallTask) Execute() error {
 	timeout, err := time.ParseDuration(t.opts.Timeout)
 	if err != nil {
-		bosherr.WrapError(err, "Parsing timeout")
+		return bosherr.WrapError(err, "Parsing timeout")
 	}
 
 	rules := t.rules()

@@ -36,7 +36,7 @@ func NewControlNetTask(cmdRunner boshsys.CmdRunner, opts ControlNetOptions, _ bo
 func (t ControlNetTask) Execute() error {
 	timeout, err := time.ParseDuration(t.opts.Timeout)
 	if err != nil {
-		bosherr.WrapError(err, "Parsing timeout")
+		return bosherr.WrapError(err, "Parsing timeout")
 	}
 
 	if len(t.opts.Delay) == 0 && len(t.opts.Loss) == 0 {

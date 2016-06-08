@@ -11,6 +11,8 @@ import (
 	boshhttp "github.com/cloudfoundry/bosh-utils/httpclient"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
+
+	"github.com/cppforlife/turbulence/agentreqs/monit"
 )
 
 type Factory struct {
@@ -54,7 +56,9 @@ func (f Factory) New() (Agent, error) {
 		return Agent{}, err
 	}
 
-	return newAgent(f.agentID, agentConfig, client, f.cmdRunner, f.logger), nil
+	monitProvider := monit.NewClientProvider(f.fs, f.logger)
+
+	return newAgent(f.agentID, agentConfig, client, monitProvider, f.cmdRunner, f.logger), nil
 }
 
 func (f Factory) agentConfig() (AgentConfig, error) {

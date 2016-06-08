@@ -45,6 +45,10 @@ func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
 				var o KillOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
+			case optType == "kill-process":
+				var o KillProcessOptions
+				err, opts = json.Unmarshal(bytes, &o), o
+
 			case optType == "stress":
 				var o StressOptions
 				err, opts = json.Unmarshal(bytes, &o), o

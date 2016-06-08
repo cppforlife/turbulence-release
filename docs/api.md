@@ -116,7 +116,7 @@ Response:
 ---
 ## Incident Tasks
 
-Currently there are four support task types that can be included in an incident. All but the `kill` task requires for a `Timeout` key to be set so that the task can complete.
+Currently there are four support task types that can be included in an incident. Some tasks require `Timeout` key to be set so that the task can complete.
 
 ### Kill
 
@@ -127,6 +127,25 @@ Example:
 ```json
 {
 	"Type": "kill"
+}
+```
+
+### Kill Process
+
+Kill one or more processes on the VM associated with an instance. It can 
+
+One of the following configurations must be selected:
+
+- set `ProcessName` (string) to a pattern used with `pkill`
+- set `MonitoredProcessName` (string) to a name of one of the processes watched by Monit
+- nothing is set which results in a random monitored process killed
+
+Example:
+
+```json
+{
+	"Type": "kill-process",
+	"MonitoredProcessName": "*worker*"
 }
 ```
 

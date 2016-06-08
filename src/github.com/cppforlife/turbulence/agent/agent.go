@@ -8,14 +8,16 @@ import (
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 
 	"github.com/cppforlife/turbulence/agentreqs"
+	"github.com/cppforlife/turbulence/agentreqs/monit"
 )
 
 type Agent struct {
 	agentID     string
 	agentConfig AgentConfig
 
-	client    Client
-	cmdRunner boshsys.CmdRunner
+	client        Client
+	monitProvider monit.ClientProvider
+	cmdRunner     boshsys.CmdRunner
 
 	logTag string
 	logger boshlog.Logger
@@ -40,13 +42,21 @@ func (c AgentConfig) AllowedOutputDests() []agentreqs.FirewallTaskDest {
 	}
 }
 
-func newAgent(agentID string, agentConfig AgentConfig, client Client, cmdRunner boshsys.CmdRunner, logger boshlog.Logger) Agent {
+func newAgent(
+	agentID string,
+	agentConfig AgentConfig,
+	client Client,
+	monitProvider monit.ClientProvider,
+	cmdRunner boshsys.CmdRunner,
+	logger boshlog.Logger,
+) Agent {
 	return Agent{
 		agentID:     agentID,
 		agentConfig: agentConfig,
 
-		client:    client,
-		cmdRunner: cmdRunner,
+		client:        client,
+		monitProvider: monitProvider,
+		cmdRunner:     cmdRunner,
 
 		logTag: "Agent",
 		logger: logger,
@@ -81,12 +91,23 @@ func (a Agent) executeTask(task agentreqs.Task) {
 	var err error
 
 	switch opts := task.Optionss[0].(type) {
+	case agentreqs.KillProcessOptions:
+		monitClient, err := a.monitProvider.Get()
+		if err != nil {
+			err = bosherr.WrapError(err, "Failed to retrieve monit client")
+		} else {
+			t = agentreqs.NewKillProcessTask(monitClient, a.cmdRunner, opts, a.logger)
+		}
+
 	case agentreqs.StressOptions:
 		t = agentreqs.NewStressTask(a.cmdRunner, opts, a.logger)
+
 	case agentreqs.ControlNetOptions:
 		t = agentreqs.NewControlNetTask(a.cmdRunner, opts, a.logger)
+
 	case agentreqs.FirewallOptions:
 		t = agentreqs.NewFirewallTask(a.cmdRunner, opts, a.agentConfig.AllowedOutputDests(), a.logger)
+
 	default:
 		err = bosherr.Errorf("Unknown agent task '%T'", task.Optionss[0])
 		a.logger.Error(a.logTag, "Ignoring unknown agent task '%T'", task.Optionss[0])
