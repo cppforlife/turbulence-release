@@ -15,3 +15,5 @@ Run `./update-deps` to update `github.com/cppforlife/turbulence` package depende
 - restrict X% bandw
 
 https://www.kernel.org/doc/Documentation/sysrq.txt might be useful...
+http://blog.hut8labs.com/gorillas-before-monkeys.html
+http://techblog.netflix.com/2011/04/lessons-netflix-learned-from-aws-outage.html
