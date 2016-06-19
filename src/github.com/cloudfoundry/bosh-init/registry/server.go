@@ -5,8 +5,8 @@ import (
 	"net"
 	"net/http"
 
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 )
 
 type ServerManager interface {
@@ -90,6 +90,10 @@ func (s *server) start(username string, password string, host string, port int, 
 }
 
 func (s *server) Stop() error {
+	if s.listener == nil {
+		return bosherr.Error("Stopping not-started registry server")
+	}
+
 	s.logger.Debug(s.logTag, "Stopping registry server")
 	err := s.listener.Close()
 	if err != nil {

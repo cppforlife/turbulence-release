@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	bihttpagent "github.com/cloudfoundry/bosh-agent/agentclient/http"
 	biblobstore "github.com/cloudfoundry/bosh-init/blobstore"
 	bicloud "github.com/cloudfoundry/bosh-init/cloud"
 	biconfig "github.com/cloudfoundry/bosh-init/config"
@@ -8,12 +9,12 @@ import (
 	bidepl "github.com/cloudfoundry/bosh-init/deployment"
 	biinstall "github.com/cloudfoundry/bosh-init/installation"
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
-	bihttpagent "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/http"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
 	birel "github.com/cloudfoundry/bosh-init/release"
 	birelsetmanifest "github.com/cloudfoundry/bosh-init/release/set/manifest"
 	biui "github.com/cloudfoundry/bosh-init/ui"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	bihttpclient "github.com/cloudfoundry/bosh-utils/httpclient"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 )
 
 type DeploymentDeleter interface {
@@ -196,7 +197,7 @@ func (c *deploymentDeleter) deploymentManager(installation biinstall.Installatio
 	agentClient := c.agentClientFactory.NewAgentClient(directorID, installationMbus)
 
 	c.logger.Debug(c.logTag, "Creating blobstore client...")
-	blobstore, err := c.blobstoreFactory.Create(installationMbus)
+	blobstore, err := c.blobstoreFactory.Create(installationMbus, bihttpclient.CreateDefaultClient())
 	if err != nil {
 		return nil, bosherr.WrapError(err, "Creating blobstore client")
 	}

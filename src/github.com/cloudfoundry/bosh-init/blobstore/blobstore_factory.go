@@ -2,19 +2,19 @@ package blobstore
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
-	boshdavcli "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-davcli/client"
-	boshdavcliconf "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-davcli/config"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	bihttpclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/httpclient"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
-	boshuuid "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/uuid"
+	boshdavcli "github.com/cloudfoundry/bosh-davcli/client"
+	boshdavcliconf "github.com/cloudfoundry/bosh-davcli/config"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
+	boshuuid "github.com/cloudfoundry/bosh-utils/uuid"
 )
 
 type Factory interface {
-	Create(string) (Blobstore, error)
+	Create(string, http.Client) (Blobstore, error)
 }
 
 type blobstoreFactory struct {
@@ -32,19 +32,20 @@ func NewBlobstoreFactory(uuidGenerator boshuuid.Generator, fs boshsys.FileSystem
 }
 
 //TODO: rename NewBlobstore
-func (f blobstoreFactory) Create(blobstoreURL string) (Blobstore, error) {
+func (f blobstoreFactory) Create(blobstoreURL string, httpClient http.Client) (Blobstore, error) {
+
+	logger := boshlog.NewLogger(boshlog.LevelNone)
+
 	blobstoreConfig, err := f.parseBlobstoreURL(blobstoreURL)
 	if err != nil {
 		return nil, bosherr.WrapError(err, "Creating blobstore config")
 	}
 
-	httpClient := bihttpclient.DefaultClient
-
 	davClient := boshdavcli.NewClient(boshdavcliconf.Config{
 		Endpoint: fmt.Sprintf("%s/blobs", blobstoreConfig.Endpoint),
 		User:     blobstoreConfig.Username,
 		Password: blobstoreConfig.Password,
-	}, &httpClient)
+	}, &httpClient, logger)
 
 	return NewBlobstore(davClient, f.uuidGenerator, f.fs, f.logger), nil
 }

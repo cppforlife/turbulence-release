@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 )
 
 type Job struct {
@@ -24,8 +24,9 @@ const (
 )
 
 type ReleaseJobRef struct {
-	Name    string
-	Release string
+	Name       string
+	Release    string
+	Properties *biproperty.Map
 }
 
 type JobNetwork struct {

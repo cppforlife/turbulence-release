@@ -3,16 +3,17 @@ package blobstore_test
 import (
 	. "github.com/cloudfoundry/bosh-init/blobstore"
 
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
 	"net/http"
 
-	boshdavcli "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-davcli/client"
-	boshdavcliconf "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-davcli/config"
-	bihttpclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/httpclient"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	fakesys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system/fakes"
-	fakeuuid "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/uuid/fakes"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
+	boshdavcli "github.com/cloudfoundry/bosh-davcli/client"
+	boshdavcliconf "github.com/cloudfoundry/bosh-davcli/config"
+	bihttpclient "github.com/cloudfoundry/bosh-utils/httpclient"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	fakesys "github.com/cloudfoundry/bosh-utils/system/fakes"
+	fakeuuid "github.com/cloudfoundry/bosh-utils/uuid/fakes"
 )
 
 var _ = Describe("BlobstoreFactory", func() {
@@ -36,13 +37,13 @@ var _ = Describe("BlobstoreFactory", func() {
 	Describe("Create", func() {
 		Context("when username and password are provided", func() {
 			It("returns the blobstore", func() {
-				blobstore, err := blobstoreFactory.Create("https://fake-user:fake-password@fake-host:1234")
+				blobstore, err := blobstoreFactory.Create("https://fake-user:fake-password@fake-host:1234", httpClient)
 				Expect(err).ToNot(HaveOccurred())
 				davClient := boshdavcli.NewClient(boshdavcliconf.Config{
 					Endpoint: "https://fake-host:1234/blobs",
 					User:     "fake-user",
 					Password: "fake-password",
-				}, &httpClient)
+				}, &httpClient, logger)
 				expectedBlobstore := NewBlobstore(davClient, fakeUUIDGenerator, fs, logger)
 				Expect(blobstore).To(Equal(expectedBlobstore))
 			})
@@ -55,10 +56,10 @@ var _ = Describe("BlobstoreFactory", func() {
 					Endpoint: "https://fake-host:1234/blobs",
 					User:     "",
 					Password: "",
-				}, &httpClient)
+				}, &httpClient, logger)
 				expectedBlobstore := NewBlobstore(davClient, fakeUUIDGenerator, fs, logger)
 
-				blobstore, err := blobstoreFactory.Create("https://fake-host:1234")
+				blobstore, err := blobstoreFactory.Create("https://fake-host:1234", httpClient)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(blobstore).To(Equal(expectedBlobstore))
 			})

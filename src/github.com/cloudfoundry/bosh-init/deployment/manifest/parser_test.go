@@ -4,12 +4,12 @@ import (
 	"errors"
 
 	. "github.com/cloudfoundry/bosh-init/deployment/manifest"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
-	fakesys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system/fakes"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
+	fakesys "github.com/cloudfoundry/bosh-utils/system/fakes"
 )
 
 var _ = Describe("Parser", func() {
@@ -67,6 +67,7 @@ resource_pools:
 networks:
 - name: fake-network-name
   type: dynamic
+  dns:  [5.5.5.5, 6.6.6.6]
   subnets:
   - range: 1.2.3.0/22
     gateway: 1.1.1.1
@@ -120,6 +121,7 @@ properties:
 				{
 					Name: "fake-network-name",
 					Type: Dynamic,
+					DNS:  []string{"5.5.5.5", "6.6.6.6"},
 					Subnets: []Subnet{
 						{
 							Range:   "1.2.3.0/22",
@@ -498,6 +500,145 @@ name: fake-deployment-name
 			Expect(deploymentManifest.Name).To(Equal("fake-deployment-name"))
 			Expect(deploymentManifest.Update.UpdateWatchTime.Start).To(Equal(0))
 			Expect(deploymentManifest.Update.UpdateWatchTime.End).To(Equal(300000))
+		})
+	})
+
+	Context("when instance_groups is defined, treats it as jobs", func() {
+		BeforeEach(func() {
+			contents := `
+---
+instance_groups:
+- name: jobby
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("treats instance groups as jobs", func() {
+			deploymentManifest, err := parser.Parse(comboManifestPath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(deploymentManifest.Jobs[0].Name).To(Equal("jobby"))
+		})
+	})
+
+	Context("when jobs is defined inside an instance_group, treats it as templates", func() {
+		BeforeEach(func() {
+			contents := `
+---
+instance_groups:
+- name: jobby
+  jobs:
+  - name: job1
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("treats instance groups as jobs", func() {
+			deploymentManifest, err := parser.Parse(comboManifestPath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(deploymentManifest.Jobs[0].Templates[0].Name).To(Equal("job1"))
+		})
+	})
+
+	Context("when job is defined inside an instance_group with properties", func() {
+		BeforeEach(func() {
+			contents := `
+---
+instance_groups:
+- name: jobby
+  jobs:
+  - name: job1
+    properties:
+      key1: value1
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("parses the property", func() {
+			deploymentManifest, err := parser.Parse(comboManifestPath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect((*deploymentManifest.Jobs[0].Templates[0].Properties)["key1"]).To(Equal("value1"))
+		})
+	})
+
+	Context("when job is defined inside an instance_group with empty properties", func() {
+		BeforeEach(func() {
+			contents := `
+---
+instance_groups:
+- name: jobby
+  jobs:
+  - name: job1
+    properties: {}
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("parses the properties as an empty map", func() {
+			deploymentManifest, err := parser.Parse(comboManifestPath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(*deploymentManifest.Jobs[0].Templates[0].Properties).To(BeEmpty())
+		})
+	})
+
+	Context("when job is defined inside an instance_group with no properties", func() {
+		BeforeEach(func() {
+			contents := `
+---
+instance_groups:
+- name: jobby
+  jobs:
+  - name: job1
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("parses the properties as nil", func() {
+			deploymentManifest, err := parser.Parse(comboManifestPath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(deploymentManifest.Jobs[0].Templates[0].Properties).To(BeNil())
+		})
+	})
+
+	Context("when both instance_groups and jobs are present at root level in deployment manifest", func() {
+		BeforeEach(func() {
+			contents := `
+---
+jobs:
+- name: jobby
+
+instance_groups:
+- name: instancey
+
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("throws an error", func() {
+			_, err := parser.Parse(comboManifestPath)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Deployment specifies both jobs and instance_groups keys, only one is allowed"))
+		})
+	})
+
+	Context("when both templates and jobs are present at job level in deployment manifest", func() {
+		BeforeEach(func() {
+			contents := `
+---
+jobs:
+- name: jobby
+  templates:
+  - name: temp1
+  jobs:
+  - name: job1
+
+`
+			fakeFs.WriteFileString(comboManifestPath, contents)
+		})
+
+		It("throws an error", func() {
+			_, err := parser.Parse(comboManifestPath)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Deployment specifies both templates and jobs keys for instance_group jobby, only one is allowed"))
 		})
 	})
 })

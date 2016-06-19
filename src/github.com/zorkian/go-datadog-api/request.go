@@ -12,20 +12,29 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
+	"time"
+
+	"github.com/cenkalti/backoff"
 )
 
 // uriForAPI is to be called with something like "/v1/events" and it will give
 // the proper request URI to be posted to.
 func (self *Client) uriForAPI(api string) string {
+	url := os.Getenv("DATADOG_HOST")
+	if url == "" {
+		url = "https://app.datadoghq.com"
+	}
 	if strings.Index(api, "?") > -1 {
-		return "https://app.datadoghq.com/api" + api + "&api_key=" +
+		return url + "/api" + api + "&api_key=" +
 			self.apiKey + "&application_key=" + self.appKey
 	} else {
-		return "https://app.datadoghq.com/api" + api + "?api_key=" +
+		return url + "/api" + api + "?api_key=" +
 			self.apiKey + "&application_key=" + self.appKey
 	}
 }
@@ -52,15 +61,24 @@ func (self *Client) doJsonRequest(method, api string,
 		req.Header.Add("Content-Type", "application/json")
 	}
 
-	// Actually do the request, error back if something crazy happened.
-	resp, err := self.HttpClient.Do(req)
+	// Perform the request and retry it if it's not a POST request
+	var resp *http.Response
+	if method == "POST" {
+		resp, err = self.HttpClient.Do(req)
+	} else {
+		resp, err = self.doRequestWithRetries(req, 60*time.Second)
+	}
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return errors.New("API error: " + resp.Status)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("API error %s: %s", resp.Status, body)
 	}
 
 	// If they don't care about the body, then we don't care to give them one,
@@ -85,4 +103,29 @@ func (self *Client) doJsonRequest(method, api string,
 		return err
 	}
 	return nil
+}
+
+// doRequestWithRetries performs an HTTP request repeatedly for maxTime or until
+// no error and no HTTP response code higher than 299 is returned.
+func (self *Client) doRequestWithRetries(req *http.Request, maxTime time.Duration) (*http.Response, error) {
+	var (
+		err  error
+		resp *http.Response
+		bo   = backoff.NewExponentialBackOff()
+	)
+	bo.MaxElapsedTime = maxTime
+
+	err = backoff.Retry(func() error {
+		resp, err = self.HttpClient.Do(req)
+		if err != nil {
+			return err
+		}
+
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			return errors.New("API error: " + resp.Status)
+		}
+		return nil
+	}, bo)
+
+	return resp, err
 }

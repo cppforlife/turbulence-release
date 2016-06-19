@@ -3,10 +3,10 @@ package fakes
 import (
 	"time"
 
+	biagentclient "github.com/cloudfoundry/bosh-agent/agentclient"
+	bias "github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
 	bidisk "github.com/cloudfoundry/bosh-init/deployment/disk"
 	bideplmanifest "github.com/cloudfoundry/bosh-init/deployment/manifest"
-	biagentclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient"
-	bias "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
 	biui "github.com/cloudfoundry/bosh-init/ui"
 )
 
@@ -55,6 +55,13 @@ type FakeVM struct {
 
 	MigrateDiskCalledTimes int
 	MigrateDiskErr         error
+
+	RunScriptInputs []string
+	RunScriptErrors map[string]error
+
+	GetStateResult biagentclient.AgentState
+	GetStateCalled int
+	GetStateErr    error
 }
 
 type UpdateDisksInput struct {
@@ -100,6 +107,7 @@ func NewFakeVM(cid string) *FakeVM {
 		attachDiskBehavior:    map[string]error{},
 		detachDiskBehavior:    map[string]error{},
 		cid:                   cid,
+		RunScriptErrors:       map[string]error{},
 	}
 }
 
@@ -192,6 +200,11 @@ func (vm *FakeVM) Disks() ([]bidisk.Disk, error) {
 	return vm.ListDisksDisks, vm.ListDisksErr
 }
 
+func (vm *FakeVM) RunScript(script string, options map[string]interface{}) error {
+	vm.RunScriptInputs = append(vm.RunScriptInputs, script)
+	return vm.RunScriptErrors[script]
+}
+
 func (vm *FakeVM) Delete() error {
 	vm.DeleteCalled++
 	return vm.DeleteErr
@@ -203,4 +216,9 @@ func (vm *FakeVM) SetAttachDiskBehavior(disk bidisk.Disk, err error) {
 
 func (vm *FakeVM) SetDetachDiskBehavior(disk bidisk.Disk, err error) {
 	vm.detachDiskBehavior[disk.CID()] = err
+}
+
+func (vm *FakeVM) GetState() (biagentclient.AgentState, error) {
+	vm.GetStateCalled++
+	return vm.GetStateResult, vm.GetStateErr
 }

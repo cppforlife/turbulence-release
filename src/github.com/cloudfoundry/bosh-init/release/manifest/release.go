@@ -7,8 +7,9 @@ type Manifest struct {
 	CommitHash         string `yaml:"commit_hash"`
 	UncommittedChanges bool   `yaml:"uncommitted_changes"`
 
-	Jobs     []JobRef     `yaml:"jobs"`
-	Packages []PackageRef `yaml:"packages"`
+	Jobs             []JobRef     `yaml:"jobs"`
+	Packages         []PackageRef `yaml:"packages"`
+	CompiledPackages []PackageRef `yaml:"compiled_packages"`
 }
 
 type JobRef struct {
@@ -21,5 +22,6 @@ type PackageRef struct {
 	Name         string   `yaml:"name"`
 	Fingerprint  string   `yaml:"fingerprint"`
 	SHA1         string   `yaml:"sha1"`
+	Stemcell     string   `yaml:"stemcell"`
 	Dependencies []string `yaml:"dependencies"`
 }

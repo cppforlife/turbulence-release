@@ -3,36 +3,43 @@ package templatescompiler
 import (
 	"encoding/json"
 
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
 	bierbrenderer "github.com/cloudfoundry/bosh-init/templatescompiler/erbrenderer"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 )
 
 type jobEvaluationContext struct {
-	releaseJob       bireljob.Job
-	jobProperties    biproperty.Map
-	globalProperties biproperty.Map
-	deploymentName   string
-	logger           boshlog.Logger
-	logTag           string
+	releaseJob           bireljob.Job
+	releaseJobProperties *biproperty.Map
+	jobProperties        biproperty.Map
+	globalProperties     biproperty.Map
+	deploymentName       string
+	address              string
+	logger               boshlog.Logger
+	logTag               string
 }
 
 // RootContext is exposed as an open struct in ERB templates.
 // It must stay same to provide backwards compatible API.
 type RootContext struct {
 	Index      int        `json:"index"`
+	ID         string     `json:"id"`
+	AZ         string     `json:"az"`
+	Bootstrap  bool       `json:"bootstrap"`
 	JobContext jobContext `json:"job"`
 	Deployment string     `json:"deployment"`
+	Address    string     `json:"address,omitempty"`
 
 	// Usually is accessed with <%= spec.networks.default.ip %>
 	NetworkContexts map[string]networkContext `json:"networks"`
 
 	//TODO: this should be a map[string]interface{}
-	GlobalProperties  biproperty.Map `json:"global_properties"`  // values from manifest's top-level properties
-	ClusterProperties biproperty.Map `json:"cluster_properties"` // values from manifest's jobs[].properties
-	DefaultProperties biproperty.Map `json:"default_properties"` // values from release's job's spec
+	GlobalProperties  biproperty.Map  `json:"global_properties"`  // values from manifest's top-level properties
+	ClusterProperties biproperty.Map  `json:"cluster_properties"` // values from instance group (deployment job) properties
+	JobProperties     *biproperty.Map `json:"job_properties"`     // values from release job (aka template) properties
+	DefaultProperties biproperty.Map  `json:"default_properties"` // values from release's job's spec
 }
 
 type jobContext struct {
@@ -47,18 +54,22 @@ type networkContext struct {
 
 func NewJobEvaluationContext(
 	releaseJob bireljob.Job,
+	releaseJobProperties *biproperty.Map,
 	jobProperties biproperty.Map,
 	globalProperties biproperty.Map,
 	deploymentName string,
+	address string,
 	logger boshlog.Logger,
 ) bierbrenderer.TemplateEvaluationContext {
 	return jobEvaluationContext{
-		releaseJob:       releaseJob,
-		jobProperties:    jobProperties,
-		globalProperties: globalProperties,
-		deploymentName:   deploymentName,
-		logger:           logger,
-		logTag:           "jobEvaluationContext",
+		releaseJob:           releaseJob,
+		releaseJobProperties: releaseJobProperties,
+		jobProperties:        jobProperties,
+		globalProperties:     globalProperties,
+		deploymentName:       deploymentName,
+		address:              address,
+		logger:               logger,
+		logTag:               "jobEvaluationContext",
 	}
 }
 
@@ -67,12 +78,20 @@ func (ec jobEvaluationContext) MarshalJSON() ([]byte, error) {
 
 	context := RootContext{
 		Index:             0,
+		ID:                "unknown",
+		AZ:                "unknown",
+		Bootstrap:         true,
 		JobContext:        jobContext{Name: ec.releaseJob.Name},
 		Deployment:        ec.deploymentName,
 		NetworkContexts:   ec.buildNetworkContexts(),
 		GlobalProperties:  ec.globalProperties,
 		ClusterProperties: ec.jobProperties,
+		JobProperties:     ec.releaseJobProperties,
 		DefaultProperties: defaultProperties,
+	}
+
+	if len(ec.address) > 0 {
+		context.Address = ec.address
 	}
 
 	ec.logger.Debug(ec.logTag, "Marshalling context %#v", context)

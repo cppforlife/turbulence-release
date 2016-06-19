@@ -11,9 +11,9 @@ import (
 	bisshtunnel "github.com/cloudfoundry/bosh-init/deployment/sshtunnel"
 	bivm "github.com/cloudfoundry/bosh-init/deployment/vm"
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
 	biui "github.com/cloudfoundry/bosh-init/ui"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 )
 
 type Instance interface {
@@ -134,21 +134,42 @@ func (i *instance) UpdateJobs(
 	deploymentManifest bideplmanifest.Manifest,
 	stage biui.Stage,
 ) error {
-	newState, err := i.stateBuilder.Build(i.jobName, i.id, deploymentManifest, stage)
+	initialAgentState, err := i.stateBuilder.BuildInitialState(i.jobName, i.id, deploymentManifest)
+	if err != nil {
+		return bosherr.WrapErrorf(err, "Building initial state for instance '%s/%d'", i.jobName, i.id)
+	}
+
+	// apply it to agent to force it to load networking details
+	err = i.vm.Apply(initialAgentState.ToApplySpec())
+	if err != nil {
+		return bosherr.WrapError(err, "Applying the initial agent state")
+	}
+
+	// now that the agent will tell us the address, get new state
+	resolvedAgentState, err := i.vm.GetState()
+	if err != nil {
+		return bosherr.WrapErrorf(err, "Getting state for instance '%s/%d'", i.jobName, i.id)
+	}
+
+	newAgentState, err := i.stateBuilder.Build(i.jobName, i.id, deploymentManifest, stage, resolvedAgentState)
 	if err != nil {
 		return bosherr.WrapErrorf(err, "Building state for instance '%s/%d'", i.jobName, i.id)
 	}
-
 	stepName := fmt.Sprintf("Updating instance '%s/%d'", i.jobName, i.id)
 	err = stage.Perform(stepName, func() error {
-		err := i.vm.Stop()
+		err = i.vm.Stop()
 		if err != nil {
 			return bosherr.WrapError(err, "Stopping the agent")
 		}
 
-		err = i.vm.Apply(newState.ToApplySpec())
+		err = i.vm.Apply(newAgentState.ToApplySpec())
 		if err != nil {
 			return bosherr.WrapError(err, "Applying the agent state")
+		}
+
+		err = i.vm.RunScript("pre-start", map[string]interface{}{})
+		if err != nil {
+			return bosherr.WrapError(err, "Running the pre-start script")
 		}
 
 		err = i.vm.Start()
@@ -162,7 +183,21 @@ func (i *instance) UpdateJobs(
 		return err
 	}
 
-	return i.waitUntilJobsAreRunning(deploymentManifest.Update.UpdateWatchTime, stage)
+	err = i.waitUntilJobsAreRunning(deploymentManifest.Update.UpdateWatchTime, stage)
+	if err != nil {
+		return err
+	}
+
+	stepName = fmt.Sprintf("Running the post-start scripts '%s/%d'", i.jobName, i.id)
+	err = stage.Perform(stepName, func() error {
+		err = i.vm.RunScript("post-start", map[string]interface{}{})
+		if err != nil {
+			return bosherr.WrapError(err, "Running the post-start script")
+		}
+		return nil
+	})
+
+	return err
 }
 
 func (i *instance) Delete(

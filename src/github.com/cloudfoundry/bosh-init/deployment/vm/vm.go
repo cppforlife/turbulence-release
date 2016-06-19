@@ -3,18 +3,18 @@ package vm
 import (
 	"time"
 
+	biagentclient "github.com/cloudfoundry/bosh-agent/agentclient"
+	bias "github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
 	bicloud "github.com/cloudfoundry/bosh-init/cloud"
 	biconfig "github.com/cloudfoundry/bosh-init/config"
 	bidisk "github.com/cloudfoundry/bosh-init/deployment/disk"
 	bideplmanifest "github.com/cloudfoundry/bosh-init/deployment/manifest"
-	biagentclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient"
-	bias "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	boshretry "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/retrystrategy"
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
-	"github.com/cloudfoundry/bosh-init/internal/github.com/pivotal-golang/clock"
 	biui "github.com/cloudfoundry/bosh-init/ui"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	boshretry "github.com/cloudfoundry/bosh-utils/retrystrategy"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
+	"github.com/pivotal-golang/clock"
 )
 
 type VM interface {
@@ -32,7 +32,9 @@ type VM interface {
 	Disks() ([]bidisk.Disk, error)
 	UnmountDisk(bidisk.Disk) error
 	MigrateDisk() error
+	RunScript(script string, options map[string]interface{}) error
 	Delete() error
+	GetState() (biagentclient.AgentState, error)
 }
 
 type vm struct {
@@ -184,6 +186,10 @@ func (vm *vm) MigrateDisk() error {
 	return vm.agentClient.MigrateDisk()
 }
 
+func (vm *vm) RunScript(script string, options map[string]interface{}) error {
+	return vm.agentClient.RunScript(script, options)
+}
+
 func (vm *vm) Delete() error {
 	deleteErr := vm.cloud.DeleteVM(vm.cid)
 	if deleteErr != nil {
@@ -206,4 +212,14 @@ func (vm *vm) Delete() error {
 
 	// returns bicloud.Error only if it is a VMNotFoundError
 	return deleteErr
+}
+
+func (vm *vm) GetState() (biagentclient.AgentState, error) {
+	agentState, err := vm.agentClient.GetState()
+
+	if err != nil {
+		return agentState, bosherr.WrapError(err, "Getting vm state")
+	}
+
+	return agentState, nil
 }

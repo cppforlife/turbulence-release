@@ -1,18 +1,20 @@
 package templatescompiler
 
 import (
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 )
 
 type JobListRenderer interface {
 	Render(
 		releaseJobs []bireljob.Job,
+		releaseJobProperties map[string]*biproperty.Map,
 		jobProperties biproperty.Map,
 		globalProperties biproperty.Map,
 		deploymentName string,
+		address string,
 	) (RenderedJobList, error)
 }
 
@@ -35,16 +37,18 @@ func NewJobListRenderer(
 
 func (r *jobListRenderer) Render(
 	releaseJobs []bireljob.Job,
+	releaseJobProperties map[string]*biproperty.Map,
 	jobProperties biproperty.Map,
 	globalProperties biproperty.Map,
 	deploymentName string,
+	address string,
 ) (RenderedJobList, error) {
 	r.logger.Debug(r.logTag, "Rendering job list: deploymentName='%s' jobProperties=%#v globalProperties=%#v", deploymentName, jobProperties, globalProperties)
 	renderedJobList := NewRenderedJobList()
 
 	// render all the jobs' templates
 	for _, releaseJob := range releaseJobs {
-		renderedJob, err := r.jobRenderer.Render(releaseJob, jobProperties, globalProperties, deploymentName)
+		renderedJob, err := r.jobRenderer.Render(releaseJob, releaseJobProperties[releaseJob.Name], jobProperties, globalProperties, deploymentName, address)
 		if err != nil {
 			defer renderedJobList.DeleteSilently()
 			return renderedJobList, bosherr.WrapErrorf(err, "Rendering templates for job '%s/%s'", releaseJob.Name, releaseJob.Fingerprint)

@@ -3,13 +3,14 @@ package stemcell
 import (
 	"fmt"
 
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
 )
 
 type ExtractedStemcell interface {
 	Manifest() Manifest
 	Delete() error
+	OsAndVersion() string
 	fmt.Stringer
 }
 
@@ -41,10 +42,15 @@ func (s *extractedStemcell) String() string {
 	return fmt.Sprintf("ExtractedStemcell{name=%s version=%s}", s.manifest.Name, s.manifest.Version)
 }
 
+func (s *extractedStemcell) OsAndVersion() string {
+	return fmt.Sprintf("%s/%s", s.manifest.OS, s.manifest.Version)
+}
+
 type Manifest struct {
 	ImagePath       string
 	Name            string
 	Version         string
+	OS              string
 	SHA1            string
 	CloudProperties biproperty.Map
 }

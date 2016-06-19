@@ -3,15 +3,15 @@ package templatescompiler_test
 import (
 	. "github.com/cloudfoundry/bosh-init/templatescompiler"
 
-	"github.com/cloudfoundry/bosh-init/internal/github.com/golang/mock/gomock"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
 	mock_template "github.com/cloudfoundry/bosh-init/templatescompiler/mocks"
+	"github.com/golang/mock/gomock"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 )
 
 var _ = Describe("JobListRenderer", func() {
@@ -30,10 +30,12 @@ var _ = Describe("JobListRenderer", func() {
 
 		mockJobRenderer *mock_template.MockJobRenderer
 
-		releaseJobs      []bireljob.Job
-		jobProperties    biproperty.Map
-		globalProperties biproperty.Map
-		deploymentName   string
+		releaseJobs          []bireljob.Job
+		releaseJobProperties map[string]*biproperty.Map
+		jobProperties        biproperty.Map
+		globalProperties     biproperty.Map
+		deploymentName       string
+		address              string
 
 		renderedJobs []*mock_template.MockRenderedJob
 
@@ -53,6 +55,13 @@ var _ = Describe("JobListRenderer", func() {
 			{Name: "fake-release-job-name-1"},
 		}
 
+		releaseJobProperties = map[string]*biproperty.Map{
+			"fake-release-job-name-0": &biproperty.Map{
+				"fake-template-property": "fake-template-property-value",
+			},
+			"fake-release-job-name-1": &biproperty.Map{},
+		}
+
 		jobProperties = biproperty.Map{
 			"fake-key": "fake-job-value",
 		}
@@ -62,6 +71,7 @@ var _ = Describe("JobListRenderer", func() {
 		}
 
 		deploymentName = "fake-deployment-name"
+		address = "1.2.3.4"
 
 		renderedJobs = []*mock_template.MockRenderedJob{
 			mock_template.NewMockRenderedJob(mockCtrl),
@@ -72,13 +82,13 @@ var _ = Describe("JobListRenderer", func() {
 	})
 
 	JustBeforeEach(func() {
-		mockJobRenderer.EXPECT().Render(releaseJobs[0], jobProperties, globalProperties, deploymentName).Return(renderedJobs[0], nil)
-		expectRender1 = mockJobRenderer.EXPECT().Render(releaseJobs[1], jobProperties, globalProperties, deploymentName).Return(renderedJobs[1], nil)
+		mockJobRenderer.EXPECT().Render(releaseJobs[0], releaseJobProperties[releaseJobs[0].Name], jobProperties, globalProperties, deploymentName, address).Return(renderedJobs[0], nil)
+		expectRender1 = mockJobRenderer.EXPECT().Render(releaseJobs[1], releaseJobProperties[releaseJobs[1].Name], jobProperties, globalProperties, deploymentName, address).Return(renderedJobs[1], nil)
 	})
 
 	Describe("Render", func() {
 		It("returns a new RenderedJobList with all the RenderedJobs", func() {
-			renderedJobList, err := jobListRenderer.Render(releaseJobs, jobProperties, globalProperties, deploymentName)
+			renderedJobList, err := jobListRenderer.Render(releaseJobs, releaseJobProperties, jobProperties, globalProperties, deploymentName, address)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(renderedJobList.All()).To(Equal([]RenderedJob{
 				renderedJobs[0],
@@ -94,7 +104,7 @@ var _ = Describe("JobListRenderer", func() {
 			It("returns an error and cleans up any sucessfully rendered jobs", func() {
 				renderedJobs[0].EXPECT().DeleteSilently()
 
-				_, err := jobListRenderer.Render(releaseJobs, jobProperties, globalProperties, deploymentName)
+				_, err := jobListRenderer.Render(releaseJobs, releaseJobProperties, jobProperties, globalProperties, deploymentName, address)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("fake-render-error"))
 			})

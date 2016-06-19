@@ -1,23 +1,23 @@
 package installation_test
 
 import (
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"github.com/cloudfoundry/bosh-init/installation"
 
-	"github.com/cloudfoundry/bosh-init/internal/github.com/golang/mock/gomock"
 	mock_template "github.com/cloudfoundry/bosh-init/templatescompiler/mocks"
+	"github.com/golang/mock/gomock"
 
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
-	fakeboshblob "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/blobstore/fakes"
-	fakeboshcmd "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/fileutil/fakes"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
-	fakeboshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system/fakes"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
 	birelpkg "github.com/cloudfoundry/bosh-init/release/pkg"
 	bitemplate "github.com/cloudfoundry/bosh-init/templatescompiler"
+	fakeboshblob "github.com/cloudfoundry/bosh-utils/blobstore/fakes"
+	fakeboshcmd "github.com/cloudfoundry/bosh-utils/fileutil/fakes"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
+	fakeboshsys "github.com/cloudfoundry/bosh-utils/system/fakes"
 
 	fakebiui "github.com/cloudfoundry/bosh-init/ui/fakes"
 )
@@ -119,16 +119,18 @@ var _ = Describe("JobRenderer", func() {
 
 		releaseJobs := []bireljob.Job{releaseJob}
 
+		releaseJobProperties := map[string]*biproperty.Map{}
 		jobProperties := biproperty.Map{
 			"fake-installation-property": "fake-installation-property-value",
 		}
 		globalProperties := biproperty.Map{}
 		deploymentName := "fake-installation-name"
+		address := ""
 
 		renderedJobList = bitemplate.NewRenderedJobList()
 		renderedJobList.Add(bitemplate.NewRenderedJob(releaseJob, "/fake-rendered-job-cpi", fakeFS, logger))
 
-		mockJobListRenderer.EXPECT().Render(releaseJobs, jobProperties, globalProperties, deploymentName).Return(renderedJobList, nil).AnyTimes()
+		mockJobListRenderer.EXPECT().Render(releaseJobs, releaseJobProperties, jobProperties, globalProperties, deploymentName, address).Return(renderedJobList, nil).AnyTimes()
 
 		fakeCompressor.CompressFilesInDirTarballPath = "/fake-rendered-job-tarball-cpi.tgz"
 

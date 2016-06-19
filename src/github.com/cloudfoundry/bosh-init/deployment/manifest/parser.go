@@ -2,11 +2,11 @@ package manifest
 
 import (
 	biutil "github.com/cloudfoundry/bosh-init/common/util"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
-	"github.com/cloudfoundry/bosh-init/internal/gopkg.in/yaml.v2"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
+	"gopkg.in/yaml.v2"
 )
 
 type Parser interface {
@@ -20,13 +20,14 @@ type parser struct {
 }
 
 type manifest struct {
-	Name          string
-	Update        UpdateSpec
-	Networks      []network
-	ResourcePools []resourcePool `yaml:"resource_pools"`
-	DiskPools     []diskPool     `yaml:"disk_pools"`
-	Jobs          []job
-	Properties    map[interface{}]interface{}
+	Name           string
+	Update         UpdateSpec
+	Networks       []network
+	ResourcePools  []resourcePool `yaml:"resource_pools"`
+	DiskPools      []diskPool     `yaml:"disk_pools"`
+	Jobs           []job
+	InstanceGroups []job `yaml:"instance_groups"`
+	Properties     map[interface{}]interface{}
 }
 
 type UpdateSpec struct {
@@ -70,6 +71,7 @@ type job struct {
 	Instances          int
 	Lifecycle          string
 	Templates          []releaseJobRef
+	Jobs               []releaseJobRef `yaml:"jobs"`
 	Networks           []jobNetwork
 	PersistentDisk     int    `yaml:"persistent_disk"`
 	PersistentDiskPool string `yaml:"persistent_disk_pool"`
@@ -80,6 +82,10 @@ type job struct {
 type releaseJobRef struct {
 	Name    string
 	Release string
+
+	// This is a pointer so we can differentiate between `properties: {}`
+	// and not specifying the key at all.
+	Properties *map[interface{}]interface{}
 }
 
 type stemcellRef struct {
@@ -154,7 +160,15 @@ func (p *parser) parseDeploymentManifest(depManifest manifest, path string) (Man
 	}
 	deployment.DiskPools = diskPools
 
-	jobs, err := p.parseJobManifests(depManifest.Jobs)
+	if len(depManifest.Jobs) > 0 && len(depManifest.InstanceGroups) > 0 {
+		return Manifest{}, bosherr.Error("Deployment specifies both jobs and instance_groups keys, only one is allowed")
+	}
+
+	rawJobs := depManifest.Jobs
+	if len(depManifest.InstanceGroups) > 0 {
+		rawJobs = depManifest.InstanceGroups
+	}
+	jobs, err := p.parseJobManifests(rawJobs)
 	if err != nil {
 		return Manifest{}, bosherr.WrapErrorf(err, "Parsing jobs: %#v", depManifest.Jobs)
 	}
@@ -192,13 +206,33 @@ func (p *parser) parseJobManifests(rawJobs []job) ([]Job, error) {
 			ResourcePool:       rawJob.ResourcePool,
 		}
 
-		if rawJob.Templates != nil {
-			releaseJobRefs := make([]ReleaseJobRef, len(rawJob.Templates), len(rawJob.Templates))
-			for i, rawJobRef := range rawJob.Templates {
-				releaseJobRefs[i] = ReleaseJobRef{
+		if len(rawJob.Templates) > 0 && len(rawJob.Jobs) > 0 {
+			return jobs, bosherr.Error("Deployment specifies both templates and jobs keys for instance_group " + job.Name + ", only one is allowed")
+		}
+
+		templates := rawJob.Templates
+		if len(rawJob.Jobs) > 0 {
+			templates = rawJob.Jobs
+		}
+
+		if templates != nil {
+			releaseJobRefs := make([]ReleaseJobRef, len(templates), len(templates))
+			for i, rawJobRef := range templates {
+				ref := ReleaseJobRef{
 					Name:    rawJobRef.Name,
 					Release: rawJobRef.Release,
 				}
+
+				if rawJobRef.Properties != nil {
+					properties, err := biproperty.BuildMap(*rawJobRef.Properties)
+					if err != nil {
+						return []Job{}, bosherr.WrapErrorf(err, "Parsing release job properties: %#v", rawJobRef.Properties)
+					}
+
+					ref.Properties = &properties
+				}
+
+				releaseJobRefs[i] = ref
 			}
 			job.Templates = releaseJobRefs
 		}
@@ -244,6 +278,7 @@ func (p *parser) parseNetworkManifests(rawNetworks []network) ([]Network, error)
 		network := Network{
 			Name: rawNetwork.Name,
 			Type: NetworkType(rawNetwork.Type),
+			DNS:  rawNetwork.DNS,
 		}
 
 		cloudProperties, err := biproperty.BuildMap(rawNetwork.CloudProperties)

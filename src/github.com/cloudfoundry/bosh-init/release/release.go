@@ -1,9 +1,9 @@
 package release
 
 import (
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
 	birelpkg "github.com/cloudfoundry/bosh-init/release/pkg"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
 )
 
 type release struct {
@@ -13,6 +13,7 @@ type release struct {
 	packages      []*birelpkg.Package
 	extractedPath string
 	fs            boshsys.FileSystem
+	isCompiled    bool
 }
 
 type Release interface {
@@ -23,6 +24,7 @@ type Release interface {
 	FindJobByName(jobName string) (job bireljob.Job, found bool)
 	Delete() error
 	Exists() bool
+	IsCompiled() bool
 }
 
 func NewRelease(
@@ -32,6 +34,7 @@ func NewRelease(
 	packages []*birelpkg.Package,
 	extractedPath string,
 	fs boshsys.FileSystem,
+	isCompiled bool,
 ) Release {
 	return &release{
 		name:          name,
@@ -40,6 +43,7 @@ func NewRelease(
 		packages:      packages,
 		extractedPath: extractedPath,
 		fs:            fs,
+		isCompiled:    isCompiled,
 	}
 }
 
@@ -71,3 +75,5 @@ func (r *release) Delete() error {
 func (r *release) Exists() bool {
 	return r.fs.FileExists(r.extractedPath)
 }
+
+func (r *release) IsCompiled() bool { return r.isCompiled }

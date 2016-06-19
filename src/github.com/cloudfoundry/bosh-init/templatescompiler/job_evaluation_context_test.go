@@ -6,23 +6,24 @@ import (
 	"io/ioutil"
 	"os"
 
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
 	. "github.com/cloudfoundry/bosh-init/templatescompiler"
 	"github.com/cloudfoundry/bosh-init/templatescompiler/erbrenderer"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("JobEvaluationContext", func() {
 	var (
 		generatedContext RootContext
 
-		releaseJob        bireljob.Job
-		clusterProperties biproperty.Map
-		globalProperties  biproperty.Map
+		releaseJob              bireljob.Job
+		jobProperties           *biproperty.Map
+		instanceGroupProperties biproperty.Map
+		deploymentProperties    biproperty.Map
 	)
 	BeforeEach(func() {
 		generatedContext = RootContext{}
@@ -30,23 +31,20 @@ var _ = Describe("JobEvaluationContext", func() {
 		releaseJob = bireljob.Job{
 			Name: "fake-job-name",
 			Properties: map[string]bireljob.PropertyDefinition{
-				"fake-default-property1.fake-default-property2": bireljob.PropertyDefinition{
-					Default: "value-from-job-defaults",
+				"property1.subproperty1": bireljob.PropertyDefinition{
+					Default: "spec-default",
+				},
+				"property2.subproperty2": bireljob.PropertyDefinition{
+					Default: "spec-default",
 				},
 			},
 		}
 
-		clusterProperties = biproperty.Map{
-			"fake-job-property1": biproperty.Map{
-				"fake-job-property2": "value-from-cluster-properties",
-			},
-		}
+		deploymentProperties = biproperty.Map{}
 
-		globalProperties = biproperty.Map{
-			"fake-global-property1": biproperty.Map{
-				"fake-global-property2": "value-from-global-properties",
-			},
-		}
+		instanceGroupProperties = biproperty.Map{}
+
+		jobProperties = nil
 	})
 
 	JustBeforeEach(func() {
@@ -54,9 +52,11 @@ var _ = Describe("JobEvaluationContext", func() {
 
 		jobEvaluationContext := NewJobEvaluationContext(
 			releaseJob,
-			clusterProperties,
-			globalProperties,
+			jobProperties,
+			instanceGroupProperties,
+			deploymentProperties,
 			"fake-deployment-name",
+			"1.2.3.4",
 			logger,
 		)
 
@@ -69,6 +69,22 @@ var _ = Describe("JobEvaluationContext", func() {
 
 	It("it has a network context section with empty IP", func() {
 		Expect(generatedContext.NetworkContexts["default"].IP).To(Equal(""))
+	})
+
+	It("it has address available in the spec", func() {
+		Expect(generatedContext.Address).To(Equal("1.2.3.4"))
+	})
+
+	It("it has id available in the spec", func() {
+		Expect(generatedContext.ID).To(Equal("unknown"))
+	})
+
+	It("it has az available in the spec", func() {
+		Expect(generatedContext.AZ).To(Equal("unknown"))
+	})
+
+	It("it has bootstrap available in the spec", func() {
+		Expect(generatedContext.Bootstrap).To(Equal(true))
 	})
 
 	var erbRenderer erbrenderer.ERBRenderer
@@ -94,9 +110,11 @@ var _ = Describe("JobEvaluationContext", func() {
 
 		jobEvaluationContext := NewJobEvaluationContext(
 			releaseJob,
-			clusterProperties,
-			globalProperties,
+			jobProperties,
+			instanceGroupProperties,
+			deploymentProperties,
 			"fake-deployment-name",
+			"1.2.3.4",
 			logger,
 		)
 
@@ -107,105 +125,125 @@ var _ = Describe("JobEvaluationContext", func() {
 		return (string)(contents)
 	}
 
-	Context("when a cluster property overrides a global property or default value", func() {
+	Context("when a deployment and instance group set a property", func() {
 		BeforeEach(func() {
-			releaseJob = bireljob.Job{
-				Name: "fake-job-name",
-				Properties: map[string]bireljob.PropertyDefinition{
-					"fake-overridden-property1.fake-overridden-property2": bireljob.PropertyDefinition{},
+			deploymentProperties = biproperty.Map{
+				"property1": biproperty.Map{
+					"subproperty1": "value-from-global-properties",
 				},
 			}
 
-			globalProperties = biproperty.Map{
-				"fake-overridden-property1": biproperty.Map{
-					"fake-overridden-property2": "value-from-global-properties",
-				},
-			}
-
-			clusterProperties = biproperty.Map{
-				"fake-overridden-property1": biproperty.Map{
-					"fake-overridden-property2": "value-from-cluster-properties",
+			instanceGroupProperties = biproperty.Map{
+				"property1": biproperty.Map{
+					"subproperty1": "value-from-cluster-properties",
 				},
 			}
 		})
 
-		It("prefers cluster values over global values", func() {
-			Expect(getValueFor("fake-overridden-property1.fake-overridden-property2")).
+		It("gives precedence to the instance group value", func() {
+			Expect(getValueFor("property1.subproperty1")).
 				To(Equal("value-from-cluster-properties"))
 		})
 	})
 
-	Context("when a global property overrides a default property", func() {
+	Context("when a deployment sets a property", func() {
 		BeforeEach(func() {
-			releaseJob = bireljob.Job{
-				Name: "fake-job-name",
-				Properties: map[string]bireljob.PropertyDefinition{
-					"fake-overridden-property1.fake-overridden-property2": bireljob.PropertyDefinition{
-						Default: "value-from-job-defaults",
-					},
+			deploymentProperties = biproperty.Map{
+				"property1": biproperty.Map{
+					"subproperty1": "value-from-global-properties",
 				},
 			}
-
-			globalProperties = biproperty.Map{
-				"fake-overridden-property1": biproperty.Map{
-					"fake-overridden-property2": "value-from-global-properties",
-				},
-			}
-
-			clusterProperties = biproperty.Map{}
 		})
 
-		It("prefers global values over default values", func() {
-			Expect(getValueFor("fake-overridden-property1.fake-overridden-property2")).
+		It("uses the value", func() {
+			Expect(getValueFor("property1.subproperty1")).
 				To(Equal("value-from-global-properties"))
 		})
 	})
 
-	Context("when a cluster property overrides a default property", func() {
+	Context("when an instance group sets a property", func() {
 		BeforeEach(func() {
-			releaseJob = bireljob.Job{
-				Name: "fake-job-name",
-				Properties: map[string]bireljob.PropertyDefinition{
-					"fake-overridden-property1.fake-overridden-property2": bireljob.PropertyDefinition{
-						Default: "value-from-job-defaults",
-					},
-				},
-			}
-
-			globalProperties = biproperty.Map{}
-
-			clusterProperties = biproperty.Map{
-				"fake-overridden-property1": biproperty.Map{
-					"fake-overridden-property2": "value-from-cluster-properties",
+			instanceGroupProperties = biproperty.Map{
+				"property1": biproperty.Map{
+					"subproperty1": "value-from-cluster-properties",
 				},
 			}
 		})
 
-		It("prefers cluster values over default values", func() {
-			Expect(getValueFor("fake-overridden-property1.fake-overridden-property2")).
+		It("uses the value", func() {
+			Expect(getValueFor("property1.subproperty1")).
 				To(Equal("value-from-cluster-properties"))
 		})
 	})
 
-	Context("when a property is not specified in cluster or global properties", func() {
+	Context("when a property is not set", func() {
+		It("uses the release's default value", func() {
+			Expect(getValueFor("property1.subproperty1")).
+				To(Equal("spec-default"))
+		})
+	})
+
+	Context("when a job sets a property", func() {
 		BeforeEach(func() {
-			releaseJob = bireljob.Job{
-				Name: "fake-job-name",
-				Properties: map[string]bireljob.PropertyDefinition{
-					"fake-overridden-property1.fake-overridden-property2": bireljob.PropertyDefinition{
-						Default: "value-from-job-defaults",
-					},
+			jobProperties = &biproperty.Map{
+				"property1": biproperty.Map{
+					"subproperty1": "job-property",
+				},
+			}
+		})
+
+		It("uses the value", func() {
+			Expect(getValueFor("property1.subproperty1")).
+				To(Equal("job-property"))
+		})
+
+		Context("when the instance group also sets a property", func() {
+			instanceGroupProperties = biproperty.Map{
+				"property2": biproperty.Map{
+					"subproperty2": "instance-group-property",
 				},
 			}
 
-			globalProperties = biproperty.Map{}
+			It("is not used", func() {
+				Expect(getValueFor("property2.subproperty2")).
+					To(Equal("spec-default"))
+			})
+		})
+	})
 
-			clusterProperties = biproperty.Map{}
+	Context("when the job sets a property to an empty hash ({})", func() {
+		BeforeEach(func() {
+			jobProperties = &biproperty.Map{}
 		})
 
-		It("uses the property's default value", func() {
-			Expect(getValueFor("fake-overridden-property1.fake-overridden-property2")).
-				To(Equal("value-from-job-defaults"))
+		Context("when an instance group sets a property", func() {
+			BeforeEach(func() {
+				instanceGroupProperties = biproperty.Map{
+					"property1": biproperty.Map{
+						"subproperty1": "value-from-instance-group-properties",
+					},
+				}
+			})
+
+			It("does not use the instance group value", func() {
+				Expect(getValueFor("property1.subproperty1")).
+					To(Equal("spec-default"))
+			})
+		})
+
+		Context("when an deployment sets a property", func() {
+			BeforeEach(func() {
+				deploymentProperties = biproperty.Map{
+					"property1": biproperty.Map{
+						"subproperty1": "value-from-global-properties",
+					},
+				}
+			})
+
+			It("does not use the instance group value", func() {
+				Expect(getValueFor("property1.subproperty1")).
+					To(Equal("spec-default"))
+			})
 		})
 	})
 })

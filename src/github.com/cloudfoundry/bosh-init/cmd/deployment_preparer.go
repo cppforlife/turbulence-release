@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"strings"
+
+	bihttpagent "github.com/cloudfoundry/bosh-agent/agentclient/http"
 	biblobstore "github.com/cloudfoundry/bosh-init/blobstore"
 	bicloud "github.com/cloudfoundry/bosh-init/cloud"
 	biconfig "github.com/cloudfoundry/bosh-init/config"
@@ -10,13 +13,13 @@ import (
 	bivm "github.com/cloudfoundry/bosh-init/deployment/vm"
 	biinstall "github.com/cloudfoundry/bosh-init/installation"
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
-	bihttpagent "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/http"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
 	birel "github.com/cloudfoundry/bosh-init/release"
 	birelsetmanifest "github.com/cloudfoundry/bosh-init/release/set/manifest"
 	bistemcell "github.com/cloudfoundry/bosh-init/stemcell"
 	biui "github.com/cloudfoundry/bosh-init/ui"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	bihttpclient "github.com/cloudfoundry/bosh-utils/httpclient"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 )
 
 func NewDeploymentPreparer(
@@ -156,6 +159,26 @@ func (c *DeploymentPreparer) PrepareDeployment(stage biui.Stage) (err error) {
 		}
 
 		extractedStemcell, err = c.stemcellFetcher.GetStemcell(deploymentManifest, stage)
+
+		nonCpiReleasesMap, _ := deploymentManifest.GetListOfTemplateReleases()
+		delete(nonCpiReleasesMap, installationManifest.Template.Release) // remove CPI release from nonCpiReleasesMap
+
+		for _, release := range c.releaseManager.List() {
+			if _, ok := nonCpiReleasesMap[release.Name()]; ok {
+				if release.IsCompiled() {
+					compilationOsAndVersion := release.Packages()[0].Stemcell
+					if strings.ToLower(compilationOsAndVersion) != strings.ToLower(extractedStemcell.OsAndVersion()) {
+						return bosherr.Errorf("OS/Version mismatch between deployment stemcell and compiled package stemcell for release '%s'", release.Name())
+					}
+				}
+			} else {
+				// It is a CPI release, check if it is compiled
+				if release.IsCompiled() {
+					return bosherr.Errorf("CPI is not allowed to be a compiled release. The provided CPI release '%s' is compiled", release.Name())
+				}
+			}
+		}
+
 		return err
 	})
 	if err != nil {
@@ -217,7 +240,7 @@ func (c *DeploymentPreparer) deploy(
 	agentClient := c.agentClientFactory.NewAgentClient(deploymentState.DirectorID, installationManifest.Mbus)
 	vmManager := c.vmManagerFactory.NewManager(cloud, agentClient)
 
-	blobstore, err := c.blobstoreFactory.Create(installationManifest.Mbus)
+	blobstore, err := c.blobstoreFactory.Create(installationManifest.Mbus, bihttpclient.CreateDefaultClient())
 	if err != nil {
 		return bosherr.WrapError(err, "Creating blobstore client")
 	}

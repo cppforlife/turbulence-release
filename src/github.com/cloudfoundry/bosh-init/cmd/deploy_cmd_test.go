@@ -2,22 +2,26 @@ package cmd_test
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 
 	bicmd "github.com/cloudfoundry/bosh-init/cmd"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
-	"github.com/cloudfoundry/bosh-init/internal/github.com/golang/mock/gomock"
+	"github.com/cloudfoundry/bosh-init/crypto"
+	"github.com/cloudfoundry/bosh-init/deployment"
+	"github.com/golang/mock/gomock"
+	"github.com/onsi/gomega/gbytes"
 
+	mock_httpagent "github.com/cloudfoundry/bosh-agent/agentclient/http/mocks"
+	mock_agentclient "github.com/cloudfoundry/bosh-init/agentclient/mocks"
 	mock_blobstore "github.com/cloudfoundry/bosh-init/blobstore/mocks"
 	mock_cloud "github.com/cloudfoundry/bosh-init/cloud/mocks"
 	mock_config "github.com/cloudfoundry/bosh-init/config/mocks"
 	mock_deployment "github.com/cloudfoundry/bosh-init/deployment/mocks"
 	mock_vm "github.com/cloudfoundry/bosh-init/deployment/vm/mocks"
 	mock_install "github.com/cloudfoundry/bosh-init/installation/mocks"
-	mock_httpagent "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/http/mocks"
-	mock_agentclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/mocks"
 	mock_registry "github.com/cloudfoundry/bosh-init/registry/mocks"
 	mock_release "github.com/cloudfoundry/bosh-init/release/mocks"
 	mock_stemcell "github.com/cloudfoundry/bosh-init/stemcell/mocks"
@@ -29,33 +33,29 @@ import (
 	biinstall "github.com/cloudfoundry/bosh-init/installation"
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
 	bitarball "github.com/cloudfoundry/bosh-init/installation/tarball"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
 	birel "github.com/cloudfoundry/bosh-init/release"
 	bireljob "github.com/cloudfoundry/bosh-init/release/job"
 	birelmanifest "github.com/cloudfoundry/bosh-init/release/manifest"
+	bipkg "github.com/cloudfoundry/bosh-init/release/pkg"
 	birelsetmanifest "github.com/cloudfoundry/bosh-init/release/set/manifest"
 	bistemcell "github.com/cloudfoundry/bosh-init/stemcell"
 	biui "github.com/cloudfoundry/bosh-init/ui"
-
-	"fmt"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 
 	fakebicloud "github.com/cloudfoundry/bosh-init/cloud/fakes"
-	"github.com/cloudfoundry/bosh-init/crypto"
-	"github.com/cloudfoundry/bosh-init/deployment"
 	fakebideplmanifest "github.com/cloudfoundry/bosh-init/deployment/manifest/fakes"
 	fakebideplval "github.com/cloudfoundry/bosh-init/deployment/manifest/fakes"
 	fakebivm "github.com/cloudfoundry/bosh-init/deployment/vm/fakes"
 	fakebiinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest/fakes"
-	fakebihttpclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/httpclient/fakes"
-	fakesys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system/fakes"
-	fakeuuid "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/uuid/fakes"
-	"github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega/gbytes"
 	fakebirel "github.com/cloudfoundry/bosh-init/release/fakes"
 	fakebirelsetmanifest "github.com/cloudfoundry/bosh-init/release/set/manifest/fakes"
 	fakebistemcell "github.com/cloudfoundry/bosh-init/stemcell/fakes"
 	fakebiui "github.com/cloudfoundry/bosh-init/ui/fakes"
+	fakebihttpclient "github.com/cloudfoundry/bosh-utils/httpclient/fakes"
+	fakesys "github.com/cloudfoundry/bosh-utils/system/fakes"
+	fakeuuid "github.com/cloudfoundry/bosh-utils/uuid/fakes"
 )
 
 var _ = Describe("DeployCmd", rootDesc)
@@ -175,7 +175,7 @@ func rootDesc() {
 
 			mockBlobstoreFactory = mock_blobstore.NewMockFactory(mockCtrl)
 			mockBlobstore = mock_blobstore.NewMockBlobstore(mockCtrl)
-			mockBlobstoreFactory.EXPECT().Create(mbusURL).Return(mockBlobstore, nil).AnyTimes()
+			mockBlobstoreFactory.EXPECT().Create(mbusURL, gomock.Any()).Return(mockBlobstore, nil).AnyTimes()
 
 			mockVMManagerFactory = mock_vm.NewMockManagerFactory(mockCtrl)
 			fakeVMManager = fakebivm.NewFakeManager()
@@ -216,6 +216,7 @@ func rootDesc() {
 					Version:         "fake-stemcell-version",
 					SHA1:            "fake-stemcell-sha1",
 					CloudProperties: biproperty.Map{},
+					OS:              "ubuntu-trusty",
 				},
 				"fake-extracted-path",
 				fakeFs,
@@ -279,6 +280,7 @@ func rootDesc() {
 			fakeCPIRelease = fakebirel.NewFakeRelease()
 			fakeCPIRelease.ReleaseName = "fake-cpi-release-name"
 			fakeCPIRelease.ReleaseVersion = "1.0"
+			fakeCPIRelease.ReleaseIsCompiled = false
 			fakeCPIRelease.ReleaseJobs = []bireljob.Job{
 				{
 					Name: "fake-cpi-release-job-name",
@@ -1029,6 +1031,100 @@ func rootDesc() {
 				Expect(deploymentState.CurrentManifestSHA1).To(Equal(""))
 				Expect(deploymentState.Releases).To(Equal([]biconfig.ReleaseRecord{}))
 				Expect(deploymentState.CurrentReleaseIDs).To(Equal([]string{}))
+			})
+		})
+
+		Context("when compiled releases are being used", func() {
+
+			var (
+				otherReleaseTarballPath   string
+				fakeOtherRelease          *fakebirel.FakeRelease
+				expectOtherReleaseExtract *gomock.Call
+			)
+
+			BeforeEach(func() {
+				otherReleaseTarballPath = "/path/to/other-release.tgz"
+
+				fakeFs.WriteFileString(otherReleaseTarballPath, "")
+
+				fakeOtherRelease = fakebirel.New("other-release", "1234")
+
+				fakeOtherRelease.ReleaseIsCompiled = true
+				fakeOtherRelease.ReleaseJobs = []bireljob.Job{{Name: "not-cpi"}}
+				fakeOtherRelease.ReleasePackages = []*bipkg.Package{
+					{
+						Stemcell: "ubuntu-trusty/fake-stemcell-version",
+					},
+				}
+				expectOtherReleaseExtract = mockReleaseExtractor.EXPECT().Extract(
+					otherReleaseTarballPath,
+				).Return(fakeOtherRelease, nil).AnyTimes()
+
+				releaseSetManifest = birelsetmanifest.Manifest{
+					Releases: []birelmanifest.ReleaseRef{
+						{
+							Name: "fake-cpi-release-name",
+							URL:  "file://" + cpiReleaseTarballPath,
+						},
+						{
+							Name: "other-release",
+							URL:  "file://" + otherReleaseTarballPath,
+						},
+					},
+				}
+
+				boshDeploymentManifest = bideplmanifest.Manifest{
+					Name: "fake-deployment-name",
+					Jobs: []bideplmanifest.Job{
+						{
+							Name: "fake-job-name",
+							Templates: []bideplmanifest.ReleaseJobRef{
+								{
+									Release: "other-release",
+								},
+							},
+						},
+					},
+					ResourcePools: []bideplmanifest.ResourcePool{
+						{
+							Stemcell: bideplmanifest.StemcellRef{
+								URL: "file://" + stemcellTarballPath,
+							},
+						},
+					},
+				}
+			})
+
+			It("extracts the compiled release tarball", func() {
+				expectOtherReleaseExtract.Times(1)
+
+				err := command.Run(fakeStage, []string{deploymentManifestPath})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("parse compiled releases correctly", func() {
+				err := command.Run(fakeStage, []string{deploymentManifestPath})
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("returns error if compiled package stemcell does not match the deployment stemcell", func() {
+				fakeOtherRelease.ReleasePackages = []*bipkg.Package{
+					{
+						Stemcell: "ubuntu-trusty/wrong-version",
+					},
+				}
+
+				err := command.Run(fakeStage, []string{deploymentManifestPath})
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("OS/Version mismatch between deployment stemcell and compiled package stemcell for release 'other-release'"))
+			})
+
+			It("returns error if CPI release is compiled", func() {
+				fakeCPIRelease.ReleaseIsCompiled = true
+
+				err := command.Run(fakeStage, []string{deploymentManifestPath})
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("CPI is not allowed to be a compiled release. The provided CPI release 'fake-cpi-release-name' is compiled"))
 			})
 		})
 	})

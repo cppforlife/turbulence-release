@@ -30,7 +30,12 @@ class TemplateEvaluationContext
     @name = spec["job"]["name"] if spec["job"].is_a?(Hash)
     @index = spec["index"]
 
-    properties1 = spec['global_properties'].recursive_merge!(spec['cluster_properties'])
+    if !spec['job_properties'].nil?
+      properties1 = spec['job_properties']
+    else
+      properties1 = spec['global_properties'].recursive_merge!(spec['cluster_properties'])
+    end
+
     properties = {}
     spec['default_properties'].each do |name, value|
       copy_property(properties, properties1, name, value)
@@ -66,6 +71,10 @@ class TemplateEvaluationContext
 
     yield *values
     InactiveElseBlock.new
+  end
+  
+  def if_link(name)
+    false
   end
 
   private

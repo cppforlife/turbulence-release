@@ -6,13 +6,13 @@ import (
 )
 
 type FakeRelease struct {
-	ReleaseName     string
-	ReleaseVersion  string
-	ReleaseJobs     []bireljob.Job
-	ReleasePackages []*birelpkg.Package
-
-	DeleteCalled bool
-	DeleteErr    error
+	ReleaseName       string
+	ReleaseVersion    string
+	ReleaseJobs       []bireljob.Job
+	ReleasePackages   []*birelpkg.Package
+	ReleaseIsCompiled bool
+	DeleteCalled      bool
+	DeleteErr         error
 }
 
 func NewFakeRelease() *FakeRelease {
@@ -52,3 +52,5 @@ func (r *FakeRelease) Delete() error {
 func (r *FakeRelease) Exists() bool {
 	return !r.DeleteCalled
 }
+
+func (r *FakeRelease) IsCompiled() bool { return r.ReleaseIsCompiled }

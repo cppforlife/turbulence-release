@@ -25,13 +25,22 @@ type Graph struct {
 	} `json:"definition"`
 }
 
+// Template variable represents a template variable that might exist on a dashboard
+type TemplateVariable struct {
+	Name    string `json:"name"`
+	Prefix  string `json:"prefix"`
+	Default string `json:"default"`
+}
+
 // Dashboard represents a user created dashboard. This is the full dashboard
 // struct when we load a dashboard in detail.
 type Dashboard struct {
-	Id          int     `json:"id"`
-	Description string  `json:"description"`
-	Title       string  `json:"title"`
-	Graphs      []Graph `json:"graphs"`
+	Id                int                `json:"id"`
+	Description       string             `json:"description"`
+	Title             string             `json:"title"`
+	Graphs            []Graph            `json:"graphs"`
+	TemplateVariables []TemplateVariable `json:"template_variables,omitempty"`
+	ReadOnly          bool               `json:"read_only"`
 }
 
 // DashboardLite represents a user created dashboard. This is the mini

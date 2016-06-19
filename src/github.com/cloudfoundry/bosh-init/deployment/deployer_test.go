@@ -6,26 +6,27 @@ import (
 
 	. "github.com/cloudfoundry/bosh-init/deployment"
 
+	mock_httpagent "github.com/cloudfoundry/bosh-agent/agentclient/http/mocks"
+	mock_agentclient "github.com/cloudfoundry/bosh-init/agentclient/mocks"
 	mock_blobstore "github.com/cloudfoundry/bosh-init/blobstore/mocks"
 	mock_instance_state "github.com/cloudfoundry/bosh-init/deployment/instance/state/mocks"
 	mock_vm "github.com/cloudfoundry/bosh-init/deployment/vm/mocks"
-	mock_httpagent "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/http/mocks"
-	mock_agentclient "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/mocks"
-	"github.com/cloudfoundry/bosh-init/internal/github.com/golang/mock/gomock"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
+	"github.com/golang/mock/gomock"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
+	bias "github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
 	biconfig "github.com/cloudfoundry/bosh-init/config"
 	biinstance "github.com/cloudfoundry/bosh-init/deployment/instance"
 	bideplmanifest "github.com/cloudfoundry/bosh-init/deployment/manifest"
 	bisshtunnel "github.com/cloudfoundry/bosh-init/deployment/sshtunnel"
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
-	bias "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
 	bistemcell "github.com/cloudfoundry/bosh-init/stemcell"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 
+	"github.com/cloudfoundry/bosh-agent/agentclient"
 	fakebicloud "github.com/cloudfoundry/bosh-init/cloud/fakes"
 	fakebiconfig "github.com/cloudfoundry/bosh-init/config/fakes"
 	fakebisshtunnel "github.com/cloudfoundry/bosh-init/deployment/sshtunnel/fakes"
@@ -171,8 +172,12 @@ var _ = Describe("Deployer", func() {
 			Deployment: "fake-deployment-name",
 		}
 
+		fakeAgentState := agentclient.AgentState{}
+		fakeVM.GetStateResult = fakeAgentState
+
 		mockStateBuilderFactory.EXPECT().NewBuilder(mockBlobstore, mockAgentClient).Return(mockStateBuilder).AnyTimes()
-		mockStateBuilder.EXPECT().Build(jobName, jobIndex, deploymentManifest, fakeStage).Return(mockState, nil).AnyTimes()
+		mockStateBuilder.EXPECT().Build(jobName, jobIndex, deploymentManifest, fakeStage, fakeAgentState).Return(mockState, nil).AnyTimes()
+		mockStateBuilder.EXPECT().BuildInitialState(jobName, jobIndex, deploymentManifest).Return(mockState, nil).AnyTimes()
 		mockState.EXPECT().ToApplySpec().Return(applySpec).AnyTimes()
 	})
 
@@ -299,6 +304,7 @@ var _ = Describe("Deployer", func() {
 
 		Expect(fakeVM.ApplyInputs).To(Equal([]fakebivm.ApplyInput{
 			{ApplySpec: applySpec},
+			{ApplySpec: applySpec},
 		}))
 	})
 
@@ -340,19 +346,15 @@ var _ = Describe("Deployer", func() {
 		}))
 	})
 
-	Context("when updating instance fails", func() {
+	Context("when applying instance spec fails", func() {
 		BeforeEach(func() {
 			fakeVM.ApplyErr = bosherr.Error("fake-apply-error")
 		})
 
-		It("logs start and stop events to the eventLogger", func() {
+		It("fails with descriptive error", func() {
 			_, err := deployer.Deploy(cloud, deploymentManifest, cloudStemcell, registryConfig, fakeVMManager, mockBlobstore, fakeStage)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("fake-apply-error"))
-
-			Expect(fakeStage.PerformCalls[2].Name).To(Equal("Updating instance 'fake-job-name/0'"))
-			Expect(fakeStage.PerformCalls[2].Error).To(HaveOccurred())
-			Expect(fakeStage.PerformCalls[2].Error.Error()).To(Equal("Applying the agent state: fake-apply-error"))
+			Expect(err.Error()).To(Equal("Applying the initial agent state: fake-apply-error"))
 		})
 	})
 

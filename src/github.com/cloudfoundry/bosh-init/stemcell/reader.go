@@ -1,18 +1,19 @@
 package stemcell
 
 import (
-	"github.com/cloudfoundry/bosh-init/internal/gopkg.in/yaml.v2"
+	"github.com/pivotal-golang/yaml"
 	"path/filepath"
 
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshcmd "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/fileutil"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
-	boshsys "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/system"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshcmd "github.com/cloudfoundry/bosh-utils/fileutil"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
+	boshsys "github.com/cloudfoundry/bosh-utils/system"
 )
 
 type manifest struct {
 	Name            string
 	Version         string
+	OS              string `yaml:"operating_system"`
 	SHA1            string
 	CloudProperties map[interface{}]interface{} `yaml:"cloud_properties"`
 }
@@ -54,6 +55,7 @@ func (s reader) Read(stemcellTarballPath string, extractedPath string) (Extracte
 	manifest := Manifest{
 		Name:    rawManifest.Name,
 		Version: rawManifest.Version,
+		OS:      rawManifest.OS,
 		SHA1:    rawManifest.SHA1,
 	}
 

@@ -3,22 +3,24 @@ package instance_test
 import (
 	. "github.com/cloudfoundry/bosh-init/deployment/instance"
 
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/ginkgo"
-	. "github.com/cloudfoundry/bosh-init/internal/github.com/onsi/gomega"
 	"time"
 
-	mock_instance_state "github.com/cloudfoundry/bosh-init/deployment/instance/state/mocks"
-	"github.com/cloudfoundry/bosh-init/internal/github.com/golang/mock/gomock"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
+	mock_instance_state "github.com/cloudfoundry/bosh-init/deployment/instance/state/mocks"
+	"github.com/golang/mock/gomock"
+
+	bias "github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
 	bicloud "github.com/cloudfoundry/bosh-init/cloud"
 	bidisk "github.com/cloudfoundry/bosh-init/deployment/disk"
 	bideplmanifest "github.com/cloudfoundry/bosh-init/deployment/manifest"
 	bisshtunnel "github.com/cloudfoundry/bosh-init/deployment/sshtunnel"
 	biinstallmanifest "github.com/cloudfoundry/bosh-init/installation/manifest"
-	bias "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-agent/agentclient/applyspec"
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	boshlog "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/logger"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 
+	"github.com/cloudfoundry/bosh-agent/agentclient"
 	fakebidisk "github.com/cloudfoundry/bosh-init/deployment/disk/fakes"
 	fakebisshtunnel "github.com/cloudfoundry/bosh-init/deployment/sshtunnel/fakes"
 	fakebivm "github.com/cloudfoundry/bosh-init/deployment/vm/fakes"
@@ -26,6 +28,7 @@ import (
 )
 
 var _ = Describe("Instance", func() {
+
 	var mockCtrl *gomock.Controller
 
 	BeforeEach(func() {
@@ -270,6 +273,8 @@ var _ = Describe("Instance", func() {
 			applySpec bias.ApplySpec
 
 			expectStateBuild *gomock.Call
+
+			expectStateBuildInitialState *gomock.Call
 		)
 
 		BeforeEach(func() {
@@ -291,12 +296,17 @@ var _ = Describe("Instance", func() {
 		})
 
 		JustBeforeEach(func() {
-			expectStateBuild = mockStateBuilder.EXPECT().Build(jobName, jobIndex, deploymentManifest, fakeStage).Return(mockState, nil).AnyTimes()
+			fakeAgentState := agentclient.AgentState{JobState: "testing"}
+			fakeVM.GetStateResult = fakeAgentState
+
+			expectStateBuild = mockStateBuilder.EXPECT().Build(jobName, jobIndex, deploymentManifest, fakeStage, fakeAgentState).Return(mockState, nil).AnyTimes()
+			expectStateBuildInitialState = mockStateBuilder.EXPECT().BuildInitialState(jobName, jobIndex, deploymentManifest).Return(mockState, nil).AnyTimes()
 			mockState.EXPECT().ToApplySpec().Return(applySpec).AnyTimes()
 		})
 
 		It("builds a new instance state", func() {
 			expectStateBuild.Times(1)
+			expectStateBuildInitialState.Times(1)
 
 			err := instance.UpdateJobs(deploymentManifest, fakeStage)
 			Expect(err).ToNot(HaveOccurred())
@@ -309,7 +319,9 @@ var _ = Describe("Instance", func() {
 			Expect(fakeVM.StopCalled).To(Equal(1))
 			Expect(fakeVM.ApplyInputs).To(Equal([]fakebivm.ApplyInput{
 				{ApplySpec: applySpec},
+				{ApplySpec: applySpec},
 			}))
+			Expect(fakeVM.RunScriptInputs).To(Equal([]string{"pre-start", "post-start"}))
 			Expect(fakeVM.StartCalled).To(Equal(1))
 		})
 
@@ -330,6 +342,7 @@ var _ = Describe("Instance", func() {
 			Expect(fakeStage.PerformCalls).To(Equal([]*fakebiui.PerformCall{
 				{Name: "Updating instance 'fake-job-name/0'"},
 				{Name: "Waiting for instance 'fake-job-name/0' to be running"},
+				{Name: "Running the post-start scripts 'fake-job-name/0'"},
 			}))
 		})
 
@@ -366,14 +379,34 @@ var _ = Describe("Instance", func() {
 				fakeVM.ApplyErr = bosherr.Error("fake-apply-error")
 			})
 
-			It("logs start and stop events to the eventLogger", func() {
+			It("fails with descriptive error", func() {
 				err := instance.UpdateJobs(deploymentManifest, fakeStage)
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("fake-apply-error"))
+				Expect(err.Error()).To(ContainSubstring("Applying the initial agent state: fake-apply-error"))
+			})
+		})
 
-				Expect(fakeStage.PerformCalls[0].Name).To(Equal("Updating instance 'fake-job-name/0'"))
-				Expect(fakeStage.PerformCalls[0].Error).To(HaveOccurred())
-				Expect(fakeStage.PerformCalls[0].Error.Error()).To(Equal("Applying the agent state: fake-apply-error"))
+		Context("when running the pre-start script fails", func() {
+			BeforeEach(func() {
+				fakeVM.RunScriptErrors["pre-start"] = bosherr.Error("fake-run-script-error")
+			})
+
+			It("returns the error", func() {
+				err := instance.UpdateJobs(deploymentManifest, fakeStage)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("fake-run-script-error"))
+			})
+		})
+
+		Context("when running the post-start script fails", func() {
+			BeforeEach(func() {
+				fakeVM.RunScriptErrors["post-start"] = bosherr.Error("fake-run-script-error-poststart")
+			})
+
+			It("returns the error", func() {
+				err := instance.UpdateJobs(deploymentManifest, fakeStage)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("fake-run-script-error-poststart"))
 			})
 		})
 

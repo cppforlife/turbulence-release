@@ -1,8 +1,8 @@
 package manifest
 
 import (
-	bosherr "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/errors"
-	biproperty "github.com/cloudfoundry/bosh-init/internal/github.com/cloudfoundry/bosh-utils/property"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
+	biproperty "github.com/cloudfoundry/bosh-utils/property"
 )
 
 type Manifest struct {
@@ -117,4 +117,18 @@ func (d Manifest) FindJobByName(jobName string) (Job, bool) {
 	}
 
 	return Job{}, false
+}
+
+func (d Manifest) GetListOfTemplateReleases() (map[string]string, bool) {
+	if len(d.Jobs) != 1 {
+		return nil, false
+	} else {
+		result := make(map[string]string)
+
+		for _, job := range d.Jobs[0].Templates {
+			result[job.Release] = job.Release
+		}
+
+		return result, true
+	}
 }
