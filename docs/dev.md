@@ -1,6 +1,8 @@
 # Development
 
-Source code is located in `src/github.com/cppforlife/turbulence`. Use `manifests/api.yml` and `manifests/agent.yml` to deploy API server and agents to BOSH Lite.
+Source code is located in `src/github.com/cppforlife/turbulence`. Use `manifests/api.yml` and `manifests/dummy.yml` to deploy API server and agents to BOSH Lite.
+
+Run `./src/github.com/cppforlife/turbunlence/bin/test` for unit tests.
 
 ## Dependencies
 

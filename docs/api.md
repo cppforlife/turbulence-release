@@ -31,10 +31,10 @@ Create request:
 		"Timeout": "10m",
 
 		"NumCPUWorkers": 1
-	}]
+	}],
 
 	"Deployments": [{
-		"Name": "cf"
+		"Name": "cf",
 		"Jobs": [{
 			"Name": "*_z1",
 			"Limit": "10-50%"
@@ -43,7 +43,7 @@ Create request:
 			"Indices": [0,1,2,3]
 		}]
 	},{
-		"Name": "etcd"
+		"Name": "etcd",
 		"Jobs": [{
 			"Name": "node_z1",
 			"Limit": "10-50%"

@@ -17,12 +17,7 @@ Next steps:
 
 - [Configuration doc](docs/config.md) on how to configure API server and agents
 - [API doc](docs/api.md) on how to use Turbulence
-- [Develoment doc](docs/dev.md) on how to contibute
+- [Development doc](docs/dev.md) on how to contibute
 
 --
 ![](https://raw.github.com/cppforlife/turbulence-release/master/docs/home.png)
-
---
-## Development
-
-Run `./src/github.com/cppforlife/turbunlence/bin/test` for unit tests.
