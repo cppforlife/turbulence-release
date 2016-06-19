@@ -21,3 +21,8 @@ Next steps:
 
 --
 ![](https://raw.github.com/cppforlife/turbulence-release/master/docs/home.png)
+
+--
+## Development
+
+Run `./src/github.com/cppforlife/turbunlence/bin/test` for unit tests.

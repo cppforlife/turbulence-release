@@ -10,7 +10,7 @@ stemcells:
 
 instance_groups:
 - name: dummy_z1
-  instances: 2
+  instances: 5
   azs: [z1, z2]
   jobs: []
   vm_type: default
