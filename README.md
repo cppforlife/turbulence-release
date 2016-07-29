@@ -1,6 +1,6 @@
 # Turbulence
 
-Turbulence release is used for injecting different failure scenarios into a BOSH deployed system. Currently following scenarios are supported:
+Turbulence release is used for injecting different failure scenarios into a BOSH deployed system. Currently the following scenarios are supported:
 
 - VM termination on BOSH supported IaaSes
 - impose CPU/RAM/IO load
@@ -17,7 +17,7 @@ Next steps:
 
 - [Configuration doc](docs/config.md) on how to configure API server and agents
 - [API doc](docs/api.md) on how to use Turbulence
-- [Development doc](docs/dev.md) on how to contibute
+- [Development doc](docs/dev.md) on how to contribute
 
 --
-![](https://raw.github.com/cppforlife/turbulence-release/master/docs/home.png)
+![](docs/home.png)
