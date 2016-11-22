@@ -29,7 +29,7 @@ Create request:
 	"Tasks": [{
 		"Type": "stress",
 		"Timeout": "10m",
-
+		
 		"NumCPUWorkers": 1
 	}],
 
