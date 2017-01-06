@@ -8,6 +8,7 @@ import (
 
 	boshblob "github.com/cloudfoundry/bosh-utils/blobstore"
 	fakeblob "github.com/cloudfoundry/bosh-utils/blobstore/fakes"
+	boshcrypto "github.com/cloudfoundry/bosh-utils/crypto"
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 )
@@ -30,12 +31,13 @@ var _ = Describe("retryableBlobstore", func() {
 			It("returns path without an error", func() {
 				innerBlobstore.GetFileName = "fake-path"
 
-				path, err := retryableBlobstore.Get("fake-blob-id", "fake-fingerprint")
+				path, err := retryableBlobstore.Get("fake-blob-id", boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(path).To(Equal("fake-path"))
 
 				Expect(innerBlobstore.GetBlobIDs).To(Equal([]string{"fake-blob-id"}))
-				Expect(innerBlobstore.GetFingerprints).To(Equal([]string{"fake-fingerprint"}))
+				Expect(innerBlobstore.GetFingerprints).To(HaveLen(1))
+				Expect(innerBlobstore.GetFingerprints[0]).To(Equal(boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint")))
 			})
 		})
 
@@ -48,7 +50,7 @@ var _ = Describe("retryableBlobstore", func() {
 					nil,
 				}
 
-				path, err := retryableBlobstore.Get("fake-blob-id", "fake-fingerprint")
+				path, err := retryableBlobstore.Get("fake-blob-id", boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(path).To(Equal("fake-last-path"))
 
@@ -56,8 +58,11 @@ var _ = Describe("retryableBlobstore", func() {
 					[]string{"fake-blob-id", "fake-blob-id", "fake-blob-id"},
 				))
 
-				Expect(innerBlobstore.GetFingerprints).To(Equal(
-					[]string{"fake-fingerprint", "fake-fingerprint", "fake-fingerprint"},
+				Expect(innerBlobstore.GetFingerprints).To(HaveLen(3))
+				Expect(innerBlobstore.GetFingerprints).To(ConsistOf(
+					boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"),
+					boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"),
+					boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"),
 				))
 			})
 		})
@@ -71,7 +76,7 @@ var _ = Describe("retryableBlobstore", func() {
 					errors.New("fake-last-get-err"),
 				}
 
-				_, err := retryableBlobstore.Get("fake-blob-id", "fake-fingerprint")
+				_, err := retryableBlobstore.Get("fake-blob-id", boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"))
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("fake-last-get-err"))
 
@@ -79,8 +84,11 @@ var _ = Describe("retryableBlobstore", func() {
 					[]string{"fake-blob-id", "fake-blob-id", "fake-blob-id"},
 				))
 
-				Expect(innerBlobstore.GetFingerprints).To(Equal(
-					[]string{"fake-fingerprint", "fake-fingerprint", "fake-fingerprint"},
+				Expect(innerBlobstore.GetFingerprints).To(HaveLen(3))
+				Expect(innerBlobstore.GetFingerprints).To(ConsistOf(
+					boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"),
+					boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"),
+					boshcrypto.NewDigest(boshcrypto.DigestAlgorithmSHA1, "fingerprint"),
 				))
 			})
 		})
@@ -124,12 +132,10 @@ var _ = Describe("retryableBlobstore", func() {
 		Context("when inner blobstore succeeds before maximum number of create tries (first time)", func() {
 			It("returns blobID and fingerprint without an error", func() {
 				innerBlobstore.CreateBlobID = "fake-blob-id"
-				innerBlobstore.CreateFingerprint = "fake-fingerprint"
 
-				blobID, fingerprint, err := retryableBlobstore.Create("fake-file-name")
+				blobID, err := retryableBlobstore.Create("fake-file-name")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(blobID).To(Equal("fake-blob-id"))
-				Expect(fingerprint).To(Equal("fake-fingerprint"))
 
 				Expect(innerBlobstore.CreateFileNames).To(Equal([]string{"fake-file-name"}))
 			})
@@ -138,17 +144,15 @@ var _ = Describe("retryableBlobstore", func() {
 		Context("when inner blobstore succeed exactly at maximum number of create tries", func() {
 			It("returns blobID and fingerprint without an error", func() {
 				innerBlobstore.CreateBlobIDs = []string{"", "", "fake-last-blob-id"}
-				innerBlobstore.CreateFingerprints = []string{"", "", "fake-last-fingerprint"}
 				innerBlobstore.CreateErrs = []error{
 					errors.New("fake-create-err-1"),
 					errors.New("fake-create-err-2"),
 					nil,
 				}
 
-				blobID, fingerprint, err := retryableBlobstore.Create("fake-file-name")
+				blobID, err := retryableBlobstore.Create("fake-file-name")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(blobID).To(Equal("fake-last-blob-id"))
-				Expect(fingerprint).To(Equal("fake-last-fingerprint"))
 
 				Expect(innerBlobstore.CreateFileNames).To(Equal(
 					[]string{"fake-file-name", "fake-file-name", "fake-file-name"},
@@ -164,7 +168,7 @@ var _ = Describe("retryableBlobstore", func() {
 					errors.New("fake-last-create-err"),
 				}
 
-				_, _, err := retryableBlobstore.Create("fake-blob-id")
+				_, err := retryableBlobstore.Create("fake-blob-id")
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("fake-last-create-err"))
 

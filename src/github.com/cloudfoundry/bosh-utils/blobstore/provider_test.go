@@ -12,10 +12,10 @@ import (
 
 var _ = Describe("Provider", func() {
 	var (
-		fs       *fakesys.FakeFileSystem
-		runner   *fakesys.FakeCmdRunner
-		logger   boshlog.Logger
-		provider Provider
+		fs             *fakesys.FakeFileSystem
+		runner         *fakesys.FakeCmdRunner
+		logger         boshlog.Logger
+		provider       Provider
 	)
 
 	BeforeEach(func() {
@@ -44,7 +44,7 @@ var _ = Describe("Provider", func() {
 				boshuuid.NewGenerator(),
 				"/var/vcap/config/blobstore-fake-external-type.json",
 			)
-			expectedBlobstore = NewSHA1VerifiableBlobstore(expectedBlobstore)
+			expectedBlobstore = NewDigestVerifiableBlobstore(expectedBlobstore)
 			expectedBlobstore = NewRetryableBlobstore(expectedBlobstore, 3, logger)
 
 			blobstore, err := provider.Get("fake-external-type", options)

@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	. "github.com/cloudfoundry/bosh-utils/blobstore"
+	"github.com/cloudfoundry/bosh-utils/crypto"
 	fakesys "github.com/cloudfoundry/bosh-utils/system/fakes"
 	fakeuuid "github.com/cloudfoundry/bosh-utils/uuid/fakes"
 )
@@ -62,7 +63,7 @@ var _ = Describe("localBlobstore", func() {
 			fs.ReturnTempFile = tempFile
 			defer fs.RemoveAll(tempFile.Name())
 
-			_, err = blobstore.Get("fake-blob-id", "")
+			_, err = blobstore.Get("fake-blob-id", crypto.NewDigest(crypto.DigestAlgorithmSHA1, "sha-sum"))
 			Expect(err).ToNot(HaveOccurred())
 
 			fileStats := fs.GetFileTestStat(tempFile.Name())
@@ -73,7 +74,7 @@ var _ = Describe("localBlobstore", func() {
 		It("errs when temp file create errs", func() {
 			fs.TempFileError = errors.New("fake-error")
 
-			fileName, err := blobstore.Get("fake-blob-id", "")
+			fileName, err := blobstore.Get("fake-blob-id", crypto.NewDigest(crypto.DigestAlgorithmSHA1, "sha-sum"))
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("fake-error"))
 
@@ -89,7 +90,7 @@ var _ = Describe("localBlobstore", func() {
 
 			fs.CopyFileError = errors.New("fake-copy-file-error")
 
-			fileName, err := blobstore.Get("fake-blob-id", "")
+			fileName, err := blobstore.Get("fake-blob-id", crypto.NewDigest(crypto.DigestAlgorithmSHA1, "sha-sum"))
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("fake-copy-file-error"))
 
@@ -118,10 +119,9 @@ var _ = Describe("localBlobstore", func() {
 
 			uuidGen.GeneratedUUID = "some-uuid"
 
-			blobID, fingerprint, err := blobstore.Create("/fake-file.txt")
+			blobID, err := blobstore.Create("/fake-file.txt")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(blobID).To(Equal("some-uuid"))
-			Expect(fingerprint).To(BeEmpty())
 
 			dirStats := fs.GetFileTestStat(fakeBlobstorePath)
 			Expect(dirStats).ToNot(BeNil())
@@ -135,7 +135,7 @@ var _ = Describe("localBlobstore", func() {
 		It("errs when generating blob id errs", func() {
 			uuidGen.GenerateError = errors.New("some-unfortunate-error")
 
-			_, _, err := blobstore.Create("some/file")
+			_, err := blobstore.Create("some/file")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("some-unfortunate-error"))
 		})
@@ -143,7 +143,7 @@ var _ = Describe("localBlobstore", func() {
 		It("errs when mkdir errs", func() {
 			fs.MkdirAllError = errors.New("fake-mkdir-error")
 
-			_, _, err := blobstore.Create("/fake-file.txt")
+			_, err := blobstore.Create("/fake-file.txt")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("fake-mkdir-error"))
 		})
@@ -154,7 +154,7 @@ var _ = Describe("localBlobstore", func() {
 			uuidGen.GeneratedUUID = "some-uuid"
 			fs.CopyFileError = errors.New("fake-copy-file-error")
 
-			_, _, err := blobstore.Create("/fake-file.txt")
+			_, err := blobstore.Create("/fake-file.txt")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("fake-copy-file-error"))
 		})
@@ -163,24 +163,26 @@ var _ = Describe("localBlobstore", func() {
 	Describe("Delete", func() {
 		It("removes the blob from the blobstore", func() {
 			fs.WriteFileString("/fake-file.txt", "fake-file-contents")
-			blobID, _, err := blobstore.Create("/fake-file.txt")
+			blobID, err := blobstore.Create("/fake-file.txt")
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = blobstore.Get(blobID, "")
+			_, err = blobstore.Get(blobID, crypto.NewDigest(crypto.DigestAlgorithmSHA1, "sha-sum"))
 			Expect(err).ToNot(HaveOccurred())
 
 			err = blobstore.Delete(blobID)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = blobstore.Get(blobID, "")
+			_, err = blobstore.Get(blobID, crypto.NewDigest(crypto.DigestAlgorithmSHA1, "sha-sum"))
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("doesn't exist"))
 		})
 
 		It("returns an error if removing the blob fails", func() {
-			fs.RemoveAllError = errors.New("failed to remove")
+			fs.RemoveAllStub = func(_ string) error {
+				return errors.New("failed to remove")
+			}
 			fs.WriteFileString("/fake-file.txt", "fake-file-contents")
-			blobID, _, err := blobstore.Create("/fake-file.txt")
+			blobID, err := blobstore.Create("/fake-file.txt")
 			Expect(err).ToNot(HaveOccurred())
 
 			err = blobstore.Delete(blobID)

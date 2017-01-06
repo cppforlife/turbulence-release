@@ -1,8 +1,9 @@
 package integration
 
 import (
-	"github.com/zorkian/go-datadog-api"
 	"testing"
+
+	"github.com/zorkian/go-datadog-api"
 )
 
 func init() {
@@ -10,7 +11,28 @@ func init() {
 }
 
 func TestCreateAndDeleteDashboard(t *testing.T) {
-	expected := getTestDashboard()
+	expected := getTestDashboard(createGraph)
+	// create the dashboard and compare it
+	actual, err := client.CreateDashboard(expected)
+	if err != nil {
+		t.Fatalf("Creating a dashboard failed when it shouldn't. (%s)", err)
+	}
+
+	defer cleanUpDashboard(t, actual.Id)
+
+	assertDashboardEquals(t, actual, expected)
+
+	// now try to fetch it freshly and compare it again
+	actual, err = client.GetDashboard(actual.Id)
+	if err != nil {
+		t.Fatalf("Retrieving a dashboard failed when it shouldn't. (%s)", err)
+	}
+	assertDashboardEquals(t, actual, expected)
+
+}
+
+func TestCreateAndDeleteAdvancesTimeseriesDashboard(t *testing.T) {
+	expected := getTestDashboard(createAdvancedTimeseriesGraph)
 	// create the dashboard and compare it
 	actual, err := client.CreateDashboard(expected)
 	if err != nil {
@@ -31,7 +53,7 @@ func TestCreateAndDeleteDashboard(t *testing.T) {
 }
 
 func TestUpdateDashboard(t *testing.T) {
-	expected := getTestDashboard()
+	expected := getTestDashboard(createGraph)
 	board, err := client.CreateDashboard(expected)
 	if err != nil {
 		t.Fatalf("Creating a dashboard failed when it shouldn't. (%s)", err)
@@ -72,7 +94,27 @@ func TestGetDashboards(t *testing.T) {
 	}
 }
 
-func getTestDashboard() *datadog.Dashboard {
+func TestCreateDashboardWithCustomGraph(t *testing.T) {
+	expected := getTestDashboard(createCustomGraph)
+	// create the dashboard and compare it
+	actual, err := client.CreateDashboard(expected)
+	if err != nil {
+		t.Fatalf("Creating a dashboard failed when it shouldn't. (%s)", err)
+	}
+
+	defer cleanUpDashboard(t, actual.Id)
+
+	assertDashboardEquals(t, actual, expected)
+
+	// now try to fetch it freshly and compare it again
+	actual, err = client.GetDashboard(actual.Id)
+	if err != nil {
+		t.Fatalf("Retrieving a dashboard failed when it shouldn't. (%s)", err)
+	}
+	assertDashboardEquals(t, actual, expected)
+}
+
+func getTestDashboard(createGraph func() []datadog.Graph) *datadog.Dashboard {
 	return &datadog.Dashboard{
 		Title:             "___Test-Board___",
 		Description:       "Testboard description",
@@ -82,7 +124,7 @@ func getTestDashboard() *datadog.Dashboard {
 }
 
 func createTestDashboard(t *testing.T) *datadog.Dashboard {
-	board := getTestDashboard()
+	board := getTestDashboard(createGraph)
 	board, err := client.CreateDashboard(board)
 	if err != nil {
 		t.Fatalf("Creating a dashboard failed when it shouldn't: %s", err)
@@ -106,17 +148,58 @@ func cleanUpDashboard(t *testing.T, id int) {
 	}
 }
 
-type TestGraphDefintionRequests struct {
-	Query   string `json:"q"`
-	Stacked bool   `json:"stacked"`
-}
-
 func createGraph() []datadog.Graph {
 	graphDefinition := datadog.Graph{}.Definition
 	graphDefinition.Viz = "timeseries"
 	r := datadog.Graph{}.Definition.Requests
-	graphDefinition.Requests = append(r, TestGraphDefintionRequests{Query: "avg:system.mem.free{*}", Stacked: false})
+	graphDefinition.Requests = append(r, datadog.GraphDefinitionRequest{Query: "avg:system.mem.free{*}", Stacked: false})
 	graph := datadog.Graph{Title: "Mandatory graph", Definition: graphDefinition}
+	graphs := []datadog.Graph{}
+	graphs = append(graphs, graph)
+	return graphs
+}
+
+func createAdvancedTimeseriesGraph() []datadog.Graph {
+	graphDefinition := datadog.Graph{}.Definition
+	graphDefinition.Viz = "timeseries"
+	r := datadog.Graph{}.Definition.Requests
+	s := datadog.GraphDefinitionRequest{}.Style
+	s.Palette = "warm"
+
+	graphDefinition.Requests = append(r, datadog.GraphDefinitionRequest{
+		Query:   "avg:system.mem.free{*}",
+		Stacked: false,
+		Type:    "bars",
+		Style:   s,
+	})
+	graph := datadog.Graph{Title: "Custom type and style graph", Definition: graphDefinition}
+	graphs := []datadog.Graph{}
+	graphs = append(graphs, graph)
+	return graphs
+}
+
+func createCustomGraph() []datadog.Graph {
+	graphDefinition := datadog.Graph{}.Definition
+	graphDefinition.Viz = "query_value"
+	r := datadog.Graph{}.Definition.Requests
+	graphDefinition.Requests = append(r, datadog.GraphDefinitionRequest{
+		Query:      "( sum:system.mem.used{*} / sum:system.mem.free{*} ) * 100",
+		Stacked:    false,
+		Aggregator: "avg",
+		ConditionalFormats: []datadog.DashboardConditionalFormat{
+			{
+				Comparator: ">",
+				Value:      99.9,
+				Palette:    "white_on_green"},
+			{
+				Comparator: ">=",
+				Value:      99,
+				Palette:    "white_on_yellow"},
+			{
+				Comparator: "<",
+				Value:      99,
+				Palette:    "white_on_red"}}})
+	graph := datadog.Graph{Title: "Mandatory graph 2", Definition: graphDefinition}
 	graphs := []datadog.Graph{}
 	graphs = append(graphs, graph)
 	return graphs

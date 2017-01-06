@@ -93,4 +93,95 @@ var _ = Describe("Blob Manager", func() {
 		})
 	})
 
+	Describe("GetPath", func() {
+		BeforeEach(func() {
+			blobId = "smurf-24"
+		})
+
+		Context("when file requested does not exist in blobsPath", func() {
+			It("returns an error", func() {
+				blobManager := NewBlobManager(fs, basePath)
+
+				_, err := blobManager.GetPath("iblob-id-does-not-exist")
+
+				Expect(err).ToNot(BeNil())
+				Expect(err.Error()).To(Equal("blob not found"))
+			})
+		})
+
+		Context("when file requested exists in blobsPath", func() {
+			It("should return the path of a copy of the requested blob", func() {
+				blobManager := NewBlobManager(fs, basePath)
+
+				err := fs.WriteFileString(filepath.Join(basePath, blobId), "smurf-content-hello")
+				defer fs.RemoveAll(blobPath)
+
+				Expect(err).To(BeNil())
+
+				filename, err := blobManager.GetPath(blobId)
+				Expect(err).To(BeNil())
+				Expect(fs.ReadFileString(filename)).To(Equal("smurf-content-hello"))
+				Expect(filename).ToNot(Equal(filepath.Join(blobPath, blobId)))
+			})
+		})
+	})
+
+	Describe("Delete", func() {
+		BeforeEach(func() {
+			blobId = "smurf-25"
+		})
+
+		Context("when file to be deleted does not exist in blobsPath", func() {
+			It("does not freak out", func() {
+				blobManager := NewBlobManager(fs, basePath)
+
+				err := blobManager.Delete("hello-i-am-no-one")
+
+				Expect(err).To(BeNil())
+			})
+		})
+
+		Context("when file to be deleted exists in blobsPath", func() {
+			It("should delete the blob", func() {
+				err := fs.WriteFileString(filepath.Join(basePath, blobId), "smurf-content")
+				Expect(err).To(BeNil())
+				Expect(fs.FileExists(filepath.Join(basePath, blobId))).To(BeTrue())
+
+				blobManager := NewBlobManager(fs, basePath)
+				err = blobManager.Delete(blobId)
+				Expect(err).To(BeNil())
+
+				Expect(fs.FileExists(filepath.Join(basePath, blobId))).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("BlobExists", func() {
+		BeforeEach(func() {
+			blobId = "super-smurf"
+		})
+
+		Context("when blob requested exists in blobsPath", func() {
+			It("returns true", func() {
+				blobManager := NewBlobManager(fs, basePath)
+
+				err := fs.WriteFileString(filepath.Join(basePath, blobId), "super-smurf-content")
+				defer fs.RemoveAll(blobPath)
+
+				Expect(err).To(BeNil())
+
+				exists := blobManager.BlobExists(blobId)
+				Expect(exists).To(BeTrue())
+			})
+		})
+
+		Context("when blob requested does NOT exist in blobsPath", func() {
+			It("returns false", func() {
+				blobManager := NewBlobManager(fs, basePath)
+				exists := blobManager.BlobExists("blob-id-does-not-exist")
+
+				Expect(exists).To(BeFalse())
+			})
+		})
+	})
 })

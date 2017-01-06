@@ -15,10 +15,6 @@ find * -maxdepth 2 -mindepth 2 -type d | grep -v turbulence | xargs rm -rf
 
 go get -d -t -v github.com/cppforlife/turbulence/...
 
-# todo why does -t flag dont work?
-go get github.com/onsi/ginkgo/ginkgo
-go get github.com/onsi/gomega
-
 # Remove all .git folders
 dirs=$(find * -maxdepth 3 -mindepth 3 -type d -name '.git')
 
