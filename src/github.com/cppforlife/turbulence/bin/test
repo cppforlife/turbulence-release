@@ -2,7 +2,7 @@
 
 result=0
 
-bin=$(cd $0/..; pwd)
+bin=$(cd `dirname $0`; pwd)
 
 GOBIN=$bin go install github.com/onsi/ginkgo/ginkgo
 

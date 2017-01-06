@@ -1,102 +1,84 @@
 package director
 
 import (
-	"crypto/tls"
-	"fmt"
-	"net"
-	"net/http"
-	"net/url"
-	"time"
-
-	boshhttp "github.com/cloudfoundry/bosh-utils/httpclient"
+	boshdir "github.com/cloudfoundry/bosh-cli/director"
+	boshuaa "github.com/cloudfoundry/bosh-cli/uaa"
+	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
-	boshsys "github.com/cloudfoundry/bosh-utils/system"
-
-	"github.com/cppforlife/turbulence/cloud"
 )
 
 type Factory struct {
-	config    Config
-	cpiConfig CPIConfig
-	cmdRunner boshsys.CmdRunner
-
-	logTag string
+	config Config
 	logger boshlog.Logger
 }
 
-func NewFactory(
-	config Config,
-	cpiConfig CPIConfig,
-	cmdRunner boshsys.CmdRunner,
-	logger boshlog.Logger,
-) Factory {
-	return Factory{
-		config:    config,
-		cpiConfig: cpiConfig,
-		cmdRunner: cmdRunner,
-
-		logTag: "director.Factory",
-		logger: logger,
-	}
+func NewFactory(config Config, logger boshlog.Logger) Factory {
+	return Factory{config: config, logger: logger}
 }
 
-func (f Factory) New() (Director, error) {
-	client, err := f.httpClient()
+func (c Factory) New() (Director, error) {
+	director, err := c.director()
 	if err != nil {
-		return Director{}, err
+		return nil, err
 	}
 
-	cpi, err := f.cpi()
-	if err != nil {
-		return Director{}, err
-	}
-
-	return Director{cpi: cpi, client: client}, nil
+	return DirectorImpl{director}, nil
 }
 
-func (f Factory) httpClient() (Client, error) {
-	certPool, err := f.config.CACertPool()
+func (c Factory) director() (boshdir.Director, error) {
+	info, err := c.info()
 	if err != nil {
-		return Client{}, err
+		return nil, err
 	}
 
-	if certPool == nil {
-		f.logger.Debug(f.logTag, "Using default root CAs")
-	} else {
-		f.logger.Debug(f.logTag, "Using custom root CAs")
+	dirConfig := c.config.UserConfig()
+
+	if info.Auth.Type == "uaa" {
+		uaa, err := c.uaa(info)
+		if err != nil {
+			return nil, err
+		}
+
+		dirConfig.TokenFunc = boshuaa.NewClientTokenSession(uaa).TokenFunc
 	}
 
-	httpTransport := &http.Transport{
-		TLSClientConfig:     &tls.Config{RootCAs: certPool},
-		TLSHandshakeTimeout: 10 * time.Second,
+	taskReporter := boshdir.NewNoopTaskReporter()
+	fileReporter := boshdir.NewNoopFileReporter()
 
-		Dial:  (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 0}).Dial,
-		Proxy: http.ProxyFromEnvironment,
-	}
-
-	endpoint := url.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s:%d", f.config.Host, f.config.Port),
-		User:   url.UserPassword(f.config.Username, f.config.Password),
-	}
-
-	httpClient := boshhttp.NewHTTPClient(http.Client{Transport: httpTransport}, f.logger)
-
-	return NewClient(endpoint.String(), httpClient, f.logger), nil
+	return boshdir.NewFactory(c.logger).New(dirConfig, taskReporter, fileReporter)
 }
 
-func (f Factory) cpi() (cloud.Cloud, error) {
-	if !f.cpiConfig.Exists() {
-		return cloud.NewNoopCloud(f.logger), nil
+func (c Factory) uaa(info boshdir.Info) (boshuaa.UAA, error) {
+	uaaURL := info.Auth.Options["url"]
+
+	uaaURLStr, ok := uaaURL.(string)
+	if !ok {
+		return nil, bosherr.Errorf("Expected URL '%s' to be a string", uaaURL)
 	}
 
-	config := cloud.CPI{
-		JobPath:     f.cpiConfig.ExePath,
-		JobsDir:     f.cpiConfig.JobsDir,
-		PackagesDir: f.cpiConfig.PackagesDir,
+	uaaConfig, err := boshuaa.NewConfigFromURL(uaaURLStr)
+	if err != nil {
+		return nil, err
 	}
 
-	cpiCmdRunner := cloud.NewCPICmdRunner(f.cmdRunner, config, f.logger)
+	uaaConfig.CACert = c.config.CACert
+	uaaConfig.Client = c.config.Client
+	uaaConfig.ClientSecret = c.config.ClientSecret
 
-	return cloud.NewCloud(cpiCmdRunner, "fake-director-id", f.logger), nil
+	if len(uaaConfig.Client) == 0 {
+		uaaConfig.Client = "bosh_cli"
+	}
+
+	return boshuaa.NewFactory(c.logger).New(uaaConfig)
+}
+
+func (c Factory) info() (boshdir.Info, error) {
+	dirConfig := c.config.AnonymousUserConfig()
+
+	director, err := boshdir.NewFactory(c.logger).New(dirConfig, nil, nil)
+	if err != nil {
+		return boshdir.Info{}, err
+	}
+
+	return director.Info()
 }

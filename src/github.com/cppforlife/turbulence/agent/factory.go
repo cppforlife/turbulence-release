@@ -109,7 +109,7 @@ func (f Factory) httpClient() (Client, error) {
 		User:   url.UserPassword(f.config.Username, f.config.Password),
 	}
 
-	httpClient := boshhttp.NewHTTPClient(http.Client{Transport: httpTransport}, f.logger)
+	httpClient := boshhttp.NewHTTPClient(&http.Client{Transport: httpTransport}, f.logger)
 
 	return NewClient(endpoint.String(), httpClient, f.logger), nil
 }

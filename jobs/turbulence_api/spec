@@ -3,10 +3,9 @@ name: turbulence_api
 
 templates:
   ctl.erb: bin/ctl
-  ca_cert.erb: config/ca_cert
+  cert: config/cert
+  private_key: config/private_key
   config.json.erb: config/config.json
-  cert.pem.erb: config/cert.pem
-  private_key.pem.erb: config/private_key.pem
 
 packages:
 - turbulence
@@ -16,7 +15,7 @@ provides:
   type: turbulence_api
   properties:
   - listen_port
-  - ca_cert
+  - cert
   - username
   - password
 
@@ -34,13 +33,9 @@ properties:
   password:
     description: "Password for the API authentication"
 
-  certificate:
+  cert:
+    type: certificate
     description: "API server certificate"
-  private_key:
-    description: "API server private key"
-  ca_cert:
-    description: "API server CA certificate"
-    default: ""
 
   director.host:
     description: "Director host"
@@ -51,18 +46,10 @@ properties:
   director.ca_cert:
     description: "CA certificate to verify Director certificate (uses system CA certificates by default)"
     default: ""
-  director.username:
-    description: "Director username"
-  director.password:
-    description: "Director password"
-
-  cpi_job_name:
-    description: "CPI job name that will be found in /var/vcap/jobs/X"
-
-  registry.host: {description: "Registry host"}
-  registry.port: {description: "Registry port"}
-  registry.username: {description: "Registry username"}
-  registry.password: {description: "Registry password"}
+  director.client:
+    description: "Director client (username in case of basic auth)"
+  director.client_secret:
+    description: "Director client secret (password in case of basic auth)"
 
   datadog.app_key:
     description: "Datadog application key used for incident reporting"

@@ -3,7 +3,6 @@ name: turbulence_agent
 
 templates:
   ctl.erb: bin/ctl
-  ca_cert.erb: config/ca_cert
   config.json.erb: config/config.json
 
 packages:

@@ -1,4 +1,4 @@
-package incident_test
+package selector_test
 
 import (
 	"testing"
@@ -9,5 +9,5 @@ import (
 
 func TestReg(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "incident")
+	RunSpecs(t, "incident/selector")
 }

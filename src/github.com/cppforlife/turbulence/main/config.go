@@ -8,7 +8,7 @@ import (
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 
 	"github.com/cppforlife/turbulence/director"
-	"github.com/cppforlife/turbulence/incident"
+	"github.com/cppforlife/turbulence/incident/reporter"
 )
 
 type Config struct {
@@ -23,19 +23,7 @@ type Config struct {
 
 	Director director.Config
 
-	// Optional
-	CPI      director.CPIConfig
-	Registry RegistryConfig
-
-	Datadog incident.DatadogConfig
-}
-
-type RegistryConfig struct {
-	Host string
-	Port int
-
-	Username string
-	Password string
+	Datadog reporter.DatadogConfig
 }
 
 func NewConfigFromPath(path string, fs boshsys.FileSystem) (Config, error) {
@@ -93,44 +81,9 @@ func (c Config) Validate() error {
 		return bosherr.WrapError(err, "Validating 'Director' config")
 	}
 
-	// CPI/registry configuration is not required but Kill functionality would not be available
-	if c.CPI.Exists() {
-		err = c.CPI.Validate()
-		if err != nil {
-			return bosherr.WrapError(err, "Validating 'CPI' config")
-		}
-
-		err = c.Registry.Validate()
-		if err != nil {
-			return bosherr.WrapError(err, "Validating 'Registry' config")
-		}
-	}
-
 	err = c.Datadog.Validate()
 	if err != nil {
 		return bosherr.WrapError(err, "Validating 'Datadog' config")
-	}
-
-	return nil
-}
-
-func (c RegistryConfig) Required() bool { return len(c.Host) > 0 }
-
-func (c RegistryConfig) Validate() error {
-	if !c.Required() {
-		return nil
-	}
-
-	if c.Port == 0 {
-		return bosherr.Error("Missing 'Port'")
-	}
-
-	if len(c.Username) == 0 {
-		return bosherr.Error("Missing 'Username'")
-	}
-
-	if len(c.Password) == 0 {
-		return bosherr.Error("Missing 'Password'")
 	}
 
 	return nil

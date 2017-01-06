@@ -1,4 +1,4 @@
-package incident
+package reporter
 
 import (
 	"sync"
@@ -6,13 +6,6 @@ import (
 
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshuuid "github.com/cloudfoundry/bosh-utils/uuid"
-)
-
-const (
-	EventTypeFindDeployment  = "FindDeployment"
-	EventTypeFindJobs        = "FindJobs"
-	EventTypeFindInstances   = "FindInstances"
-	EventTypeSelectInstances = "SelectInstances"
 )
 
 type Events struct {
@@ -26,26 +19,6 @@ type Events struct {
 	events []*Event
 
 	logger boshlog.Logger
-}
-
-type Event struct {
-	reporter   Reporter
-	incidentID string
-
-	resultsWg *sync.WaitGroup
-
-	ID   string // may be empty
-	Type string
-
-	DeploymentName string
-	JobName        string
-	JobNameMatch   string
-	JobIndex       *int
-
-	ExecutionStartedAt   time.Time
-	ExecutionCompletedAt time.Time
-
-	Error error
 }
 
 type EventResult struct {
@@ -115,31 +88,4 @@ func (e *Events) FirstError() error {
 	}
 
 	return nil
-}
-
-func (e *Event) ErrorStr() string {
-	if e.Error != nil {
-		return e.Error.Error()
-	}
-
-	return ""
-}
-
-func (e *Event) MarkError(err error) bool {
-	e.Error = err
-	e.ExecutionCompletedAt = time.Now().UTC()
-
-	// Call it done after updating event
-	e.resultsWg.Done()
-
-	e.reporter.ReportEventExecutionCompletion(e.incidentID, *e)
-
-	return err != nil
-}
-
-func (e *Event) IsAction() bool {
-	return e.Type != EventTypeFindDeployment &&
-		e.Type != EventTypeFindJobs &&
-		e.Type != EventTypeFindInstances &&
-		e.Type != EventTypeSelectInstances
 }

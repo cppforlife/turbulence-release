@@ -19,7 +19,7 @@ var (
 func main() {
 	flag.Parse()
 
-	// Necessary for KillProcessTask
+	// todo necessary for KillProcessTask
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	logger, fs, cmdRunner, _ := basicDeps(*debugOpt)

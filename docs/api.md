@@ -2,15 +2,16 @@
 
 ## Incidents
 
-Turbulence API server can perform several types of tasks against a subset of instances in several deployments. Types of tasks and selection of instances is represented by an incident.
+API server can perform several types of tasks against a subset of instances in several deployments. Types of tasks and selection of instances is represented by an incident.
 
 See 'Incident Types' section below for details on which task types are available.
 
 Instance selection is based on `Deployments` (array of hashes; required) configuration. An incident may affect one or deployments from which one or more jobs can be selected. For each job selected, its instances are filtered via `Indices` (array of ints) or `Limit` (string) keys. Limit value may be one of the following:
 
 - `10`: kill 10 *random* instances
-- `10%`: kill random 10% of all instances
-- `5-10%`: kill random 5% to 10% of all instances
+- `5-10`: kill 5-10 *random* instances
+- `10%`: kill random 10% of instances
+- `5%-10%`: kill random 5% to 10% of instances
 
 Endpoints:
 
@@ -19,8 +20,10 @@ Endpoints:
 - `GET /api/v1/incidents/:id`
 
 ```
-curl -vvv -k -X POST https://user:pass@10.244.8.2:8080/api/v1/incidents -H 'Accept: application/json' -d@example.json
+$ curl -vvv -k -X POST https://user:pass@10.244.8.2:8080/api/v1/incidents -H 'Accept: application/json' -d@example.json
 ```
+
+See [docs/kill.sh](kill.sh) for live example.
 
 Create request:
 
@@ -33,22 +36,17 @@ Create request:
 		"NumCPUWorkers": 1
 	}],
 
-	"Deployments": [{
-		"Name": "cf",
-		"Jobs": [{
-			"Name": "*_z1",
-			"Limit": "10-50%"
-		},{
-			"Name": "api_z2",
-			"Indices": [0,1,2,3]
-		}]
-	},{
-		"Name": "etcd",
-		"Jobs": [{
-			"Name": "node_z1",
-			"Limit": "10-50%"
-		}]
-	}]
+	"Selector": {
+		"Deployment": {
+			"Name": "cf"
+		},
+		"Group": {
+			"Name": "postgres",
+		},
+		"ID": {
+			"Limit": "30%"
+		}
+	}
 }
 ```
 
@@ -59,7 +57,7 @@ Response:
   "ID": "d77adc3b-1de4-4e12-4bee-b325adfbecbd",
 
   "Tasks": [ ... ],
-  "Deployments": [ ... ],
+  "Selector": { ... },
 
   "ExecutionStartedAt": "0001-01-01T00:00:00Z",
   "ExecutionCompletedAt": "",
@@ -68,10 +66,51 @@ Response:
 }
 ```
 
+Available selector rules:
+
+- AZ
+  - set `Name` (string; optional)
+  - set `Limit` (string; optional)
+
+- Deployment
+  - set `Name` (string; optional)
+  - set `Limit` (string; optional)
+
+- Group
+  - set `Name` (string; optional)
+  - set `Limit` (string; optional)
+
+- ID
+  - set `In` (array of strings; optional)
+  - set `Limit` (string; optional)
+
+Limits default to 100%. Name defaults to '*' and wildcard matches are supported.
+
+```json
+{
+	"AZ": {
+		"Name": "z1",
+		"Limit": "5"
+	},
+	"Deployment": {
+		"Name": "cf-*",
+		"Limit": "5"
+	},
+	"Group": {
+		"Name": "postgres",
+		"Limit": "5"
+	},
+	"ID": {
+		"In": ["53c5ae69-4622-4103-9766-230adcf3baef"],
+		"Limit": "5"
+	}
+}
+```
+
 ---
 ## Scheduled Incidents
 
-Turbulence API server can create new incidents based on a schedule. `Schedule` (string; required) can be specified in cron format or with one of the shorthands:
+API server can create new incidents based on a schedule. `Schedule` (string; required) can be specified in cron format or with one of the shorthands:
 
 - `@yearly`
 - `@monthly`
@@ -90,8 +129,10 @@ Endpoints:
 - `DELETE /api/v1/scheduled_incidents/:id`
 
 ```
-curl -vvv -k -X POST https://user:pass@10.244.8.2:8080/api/v1/scheduled_incidents -H 'Accept: application/json' -d@example.json
+$ curl -vvv -k -X POST https://user:pass@10.244.8.2:8080/api/v1/scheduled_incidents -H 'Accept: application/json' -d@example.json
 ```
+
+See [docs/kill-scheduled.sh](kill-scheduled.sh) for live example.
 
 Create request:
 
@@ -120,7 +161,7 @@ Currently there are four support task types that can be included in an incident.
 
 ### Kill
 
-Deletes the VM associated with an instance. Turbulence API server uses collocated CPI job directly. It does not use the Director to the delete the VM.
+Deletes the VM associated with an instance. API server uses newer Director API that is equivalent to using `bosh delete-vm VMCID` command.
 
 Example:
 
@@ -193,7 +234,7 @@ Currently iptables is used for dropping packets from INPUT and OUTPUT chains.
 
 Optionally specify:
 
-- set `BlockBOSHAgent` (bool) to false to block access to the BOSH Agent
+- set `BlockBOSHAgent` (bool) to true to block access to the BOSH Agent
 
 Example:
 

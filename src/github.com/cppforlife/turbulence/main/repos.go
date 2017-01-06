@@ -7,6 +7,7 @@ import (
 	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/director"
 	"github.com/cppforlife/turbulence/incident"
+	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/scheduledinc"
 )
 
@@ -18,7 +19,7 @@ type Repos struct {
 
 func NewRepos(
 	uuidGen boshuuid.Generator,
-	reporter incident.Reporter,
+	reporter reporter.Reporter,
 	director director.Director,
 	incidentNotifier incident.RepoNotifier,
 	scheduledIncidentNotifier scheduledinc.RepoNotifier,

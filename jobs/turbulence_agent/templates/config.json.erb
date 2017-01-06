@@ -8,7 +8,7 @@ JSON.dump(
 	"API" => {
 		"Host" => api.instances.first.address,
 		"Port" => api.p("listen_port"),
-		"CACert" => "", # todo
+		"CACert" => api.p("cert.ca"),
 		"Username" => api.p("username"),
 		"Password" => api.p("password"),
 	},

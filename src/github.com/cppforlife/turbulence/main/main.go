@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	biregistry "github.com/cloudfoundry/bosh-init/registry"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 	boshuuid "github.com/cloudfoundry/bosh-utils/uuid"
@@ -19,6 +18,7 @@ import (
 	ctrls "github.com/cppforlife/turbulence/controllers"
 	"github.com/cppforlife/turbulence/director"
 	"github.com/cppforlife/turbulence/incident"
+	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/scheduledinc"
 )
 
@@ -34,42 +34,26 @@ func main() {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	logger, fs, cmdRunner, uuidGen := basicDeps(*debugOpt)
+	logger, fs, uuidGen := basicDeps(*debugOpt)
 	defer logger.HandlePanic("Main")
 
 	config, err := NewConfigFromPath(*configPathOpt, fs)
 	ensureNoErr(logger, "Loading config", err)
 
-	if config.Registry.Required() {
-		serverManager := biregistry.NewServerManager(logger)
-
-		_, err := serverManager.Start(
-			config.Registry.Username,
-			config.Registry.Password,
-			config.Registry.Host,
-			config.Registry.Port,
-		)
-		ensureNoErr(logger, "Starting registry", err)
-	}
-
-	var reporter incident.Reporter
+	var rep reporter.Reporter
 
 	{
 		if config.Datadog.Required() {
-			reporter = incident.NewDatadogReporter(
-				config.Datadog.APIKey,
-				config.Datadog.AppKey,
-				logger,
-			)
+			rep = reporter.NewDatadog(config.Datadog, logger)
 		} else {
-			reporter = incident.NewLoggerReporter(logger)
+			rep = reporter.NewLogger(logger)
 		}
 	}
 
 	var dir director.Director
 
 	{
-		directorFactory := director.NewFactory(config.Director, config.CPI, cmdRunner, logger)
+		directorFactory := director.NewFactory(config.Director, logger)
 
 		dir, err = directorFactory.New()
 		ensureNoErr(logger, "Failed building director", err)
@@ -81,7 +65,7 @@ func main() {
 
 	go scheduler.Run()
 
-	repos, err := NewRepos(uuidGen, reporter, dir, worker, scheduler, logger)
+	repos, err := NewRepos(uuidGen, rep, dir, worker, scheduler, logger)
 	ensureNoErr(logger, "Failed building repos", err)
 
 	controllerFactory, err := ctrls.NewFactory(repos, logger)
@@ -91,7 +75,7 @@ func main() {
 	ensureNoErr(logger, "Running controllers", err)
 }
 
-func basicDeps(debug bool) (boshlog.Logger, boshsys.FileSystem, boshsys.CmdRunner, boshuuid.Generator) {
+func basicDeps(debug bool) (boshlog.Logger, boshsys.FileSystem, boshuuid.Generator) {
 	logLevel := boshlog.LevelInfo
 
 	// Debug generates a lot of log activity
@@ -101,9 +85,8 @@ func basicDeps(debug bool) (boshlog.Logger, boshsys.FileSystem, boshsys.CmdRunne
 
 	logger := boshlog.NewWriterLogger(logLevel, os.Stderr, os.Stderr)
 	fs := boshsys.NewOsFileSystem(logger)
-	runner := boshsys.NewExecCmdRunner(logger)
 	uuidGen := boshuuid.NewGenerator()
-	return logger, fs, runner, uuidGen
+	return logger, fs, uuidGen
 }
 
 func ensureNoErr(logger boshlog.Logger, errPrefix string, err error) {

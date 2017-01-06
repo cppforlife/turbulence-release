@@ -5,29 +5,17 @@ LOG_DIR=/var/vcap/sys/log/turbulence_agent
 CONF_DIR=/var/vcap/jobs/turbulence_agent/config
 PIDFILE=$RUN_DIR/pid
 
-source /var/vcap/packages/turbulence/pid_utils.sh
-
 case $1 in
 
   start)
-    pid_guard $PIDFILE "turbulence_agent"
-
     mkdir -p $RUN_DIR $LOG_DIR
     chown -R vcap:vcap $RUN_DIR $LOG_DIR
 
-    <% if !link("api").p("ca_cert").empty? %>
-    # todo what's going on with golang's root ca?
-    cert_path=/usr/local/share/ca-certificates/turbulence.crt
-    cp /var/vcap/jobs/turbulence_agent/config/ca_cert $cert_path
-    update-ca-certificates -f
-    <% end %>
-
+    # todo hostname is not that good
     agent_id=$(hostname)
     sed -i "s:_agent_id_:${agent_id}:g" $CONF_DIR/config.json
 
     echo $$ > $PIDFILE
-
-    cd /var/vcap/packages/turbulence/
 
     export PATH=/var/vcap/packages/stress/bin:$PATH
 
@@ -41,7 +29,10 @@ case $1 in
     ;;
 
   stop)
-    kill_and_wait $PIDFILE
+    if [ -f $PIDFILE ]; then
+      kill -9 `cat $PIDFILE` || true
+      rm -f $PIDFILE
+    fi
 
     ;;
 

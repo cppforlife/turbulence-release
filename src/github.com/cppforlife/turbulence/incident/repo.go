@@ -10,6 +10,7 @@ import (
 
 	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/director"
+	"github.com/cppforlife/turbulence/incident/reporter"
 )
 
 type IncidentNotFoundError struct {
@@ -20,27 +21,10 @@ func (e IncidentNotFoundError) Error() string {
 	return fmt.Sprintf("Incident '%s' does not exist", e.ID)
 }
 
-type Repo interface {
-	ListAll() ([]Incident, error)
-	Create(IncidentReq) (Incident, error)
-	Read(string) (Incident, error)
-}
-
-type RepoNotifier interface {
-	IncidentWasCreated(Incident)
-}
-
-type Reporter interface {
-	ReportIncidentExecutionStart(Incident)
-	ReportIncidentExecutionCompletion(Incident)
-	ReportEventExecutionStart(string, Event)
-	ReportEventExecutionCompletion(string, Event)
-}
-
 type repo struct {
 	uuidGen       boshuuid.Generator
 	notifier      RepoNotifier
-	reporter      Reporter
+	reporter      reporter.Reporter
 	director      director.Director
 	agentReqsRepo agentreqs.Repo
 
@@ -53,7 +37,7 @@ type repo struct {
 func NewRepo(
 	uuidGen boshuuid.Generator,
 	notifier RepoNotifier,
-	reporter Reporter,
+	reporter reporter.Reporter,
 	director director.Director,
 	agentReqsRepo agentreqs.Repo,
 	logger boshlog.Logger,
@@ -90,14 +74,14 @@ func (r *repo) Create(req IncidentReq) (Incident, error) {
 		agentReqsRepo: r.agentReqsRepo,
 		updateFunc:    r.update,
 
-		ID: id,
+		id: id,
 
-		Tasks:       req.Tasks,
-		Deployments: req.Deployments,
+		Tasks:    req.Tasks,
+		Selector: req.Selector,
 
-		Events: NewEvents(r.uuidGen, r.reporter, id, r.logger),
+		events: reporter.NewEvents(r.uuidGen, r.reporter, id, r.logger),
 
-		logTag: "Incident",
+		logTag: "incident.Incident",
 		logger: r.logger,
 	}
 
@@ -116,7 +100,7 @@ func (r *repo) Read(id string) (Incident, error) {
 	defer r.incidentsLock.Unlock()
 
 	for _, incident := range r.incidents {
-		if incident.ID == id {
+		if incident.ID() == id {
 			return incident, nil
 		}
 	}
@@ -129,7 +113,7 @@ func (r *repo) update(updatedIncident Incident) error {
 	defer r.incidentsLock.Unlock()
 
 	for i, incident := range r.incidents {
-		if incident.ID == updatedIncident.ID {
+		if incident.ID() == updatedIncident.ID() {
 			r.incidents[i] = updatedIncident
 			break
 		}

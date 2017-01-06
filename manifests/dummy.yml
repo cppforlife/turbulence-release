@@ -1,7 +1,9 @@
 ---
 name: dummy
 
-releases: []
+releases:
+- name: turbulence
+  version: latest
 
 stemcells:
 - alias: default
@@ -12,7 +14,11 @@ instance_groups:
 - name: dummy_z1
   instances: 5
   azs: [z1, z2]
-  jobs: []
+  jobs:
+  - name: turbulence_agent
+    release: turbulence
+    consumes:
+      api: {from: api, deployment: turbulence}
   vm_type: default
   stemcell: default
   networks:
@@ -21,7 +27,11 @@ instance_groups:
 - name: dummy_z2
   instances: 1
   azs: [z1, z2]
-  jobs: []
+  jobs:
+  - name: turbulence_agent
+    release: turbulence
+    consumes:
+      api: {from: api, deployment: turbulence}
   vm_type: default
   stemcell: default
   networks:

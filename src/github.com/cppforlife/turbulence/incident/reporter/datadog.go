@@ -1,4 +1,4 @@
-package incident
+package reporter
 
 import (
 	"fmt"
@@ -14,23 +14,23 @@ type DatadogConfig struct {
 	AppKey string
 }
 
-type DatadogReporter struct {
+type Datadog struct {
 	client *datadog.Client
 
 	logTag string
 	logger boshlog.Logger
 }
 
-func NewDatadogReporter(apiKey, appKey string, logger boshlog.Logger) DatadogReporter {
-	return DatadogReporter{
-		client: datadog.NewClient(apiKey, appKey),
+func NewDatadog(config DatadogConfig, logger boshlog.Logger) Datadog {
+	return Datadog{
+		client: datadog.NewClient(config.APIKey, config.AppKey),
 
-		logTag: "DatadogReporter",
+		logTag: "incident.reporter.Datadog",
 		logger: logger,
 	}
 }
 
-func (r DatadogReporter) ReportIncidentExecutionStart(i Incident) {
+func (r Datadog) ReportIncidentExecutionStart(i Incident) {
 	text, err := i.ShortDescription()
 	if err != nil {
 		text = fmt.Sprintf("Failed to generate incident description: %#v", i)
@@ -40,7 +40,7 @@ func (r DatadogReporter) ReportIncidentExecutionStart(i Incident) {
 	event := &datadog.Event{
 		Title: r.incidentTitle("Started", i),
 		Text:  text,
-		Time:  int(i.ExecutionStartedAt.Unix()),
+		Time:  int(i.ExecutionStartedAt().Unix()),
 
 		Priority:  "normal",
 		AlertType: "info",
@@ -49,7 +49,7 @@ func (r DatadogReporter) ReportIncidentExecutionStart(i Incident) {
 		Aggregation: "",
 		SourceType:  "turbulence-api",
 
-		Tags:     []string{"incident:" + i.ID},
+		Tags:     []string{"incident:" + i.ID()},
 		Resource: "",
 	}
 
@@ -57,15 +57,15 @@ func (r DatadogReporter) ReportIncidentExecutionStart(i Incident) {
 	if err != nil {
 		r.logger.Error(r.logTag, "Failed to send incident execution start event: %s event=%#v", err.Error(), event)
 	} else {
-		r.logger.Debug(r.logTag, "Posted incident '%s' execution start datadog event '%d'", i.ID, event.Id)
+		r.logger.Debug(r.logTag, "Posted incident '%s' execution start datadog event '%d'", i.ID(), event.Id)
 	}
 }
 
-func (r DatadogReporter) ReportIncidentExecutionCompletion(i Incident) {
+func (r Datadog) ReportIncidentExecutionCompletion(i Incident) {
 	text := ""
 	alertType := "info"
 
-	incidentErr := i.Events.FirstError()
+	incidentErr := i.Events().FirstError()
 	if incidentErr != nil {
 		text = fmt.Sprintf("Error: %s", incidentErr.Error())
 		alertType = "error"
@@ -74,7 +74,7 @@ func (r DatadogReporter) ReportIncidentExecutionCompletion(i Incident) {
 	event := &datadog.Event{
 		Title: r.incidentTitle("Completed", i),
 		Text:  text,
-		Time:  int(i.ExecutionCompletedAt.Unix()),
+		Time:  int(i.ExecutionCompletedAt().Unix()),
 
 		Priority:  "normal",
 		AlertType: alertType,
@@ -83,7 +83,7 @@ func (r DatadogReporter) ReportIncidentExecutionCompletion(i Incident) {
 		Aggregation: "",
 		SourceType:  "turbulence-api",
 
-		Tags:     []string{"incident:" + i.ID},
+		Tags:     []string{"incident:" + i.ID()},
 		Resource: "",
 	}
 
@@ -91,11 +91,11 @@ func (r DatadogReporter) ReportIncidentExecutionCompletion(i Incident) {
 	if err != nil {
 		r.logger.Error(r.logTag, "Failed to send incident execution completion event: %s event=%#v", err.Error(), event)
 	} else {
-		r.logger.Debug(r.logTag, "Posted incident '%s' execution completion datadog event '%d'", i.ID, event.Id)
+		r.logger.Debug(r.logTag, "Posted incident '%s' execution completion datadog event '%d'", i.ID(), event.Id)
 	}
 }
 
-func (r DatadogReporter) ReportEventExecutionStart(incidentID string, e Event) {
+func (r Datadog) ReportEventExecutionStart(incidentID string, e Event) {
 	if !e.IsAction() {
 		return
 	}
@@ -124,7 +124,7 @@ func (r DatadogReporter) ReportEventExecutionStart(incidentID string, e Event) {
 	}
 }
 
-func (r DatadogReporter) ReportEventExecutionCompletion(incidentID string, e Event) {
+func (r Datadog) ReportEventExecutionCompletion(incidentID string, e Event) {
 	if !e.IsAction() {
 		return
 	}
@@ -161,24 +161,21 @@ func (r DatadogReporter) ReportEventExecutionCompletion(incidentID string, e Eve
 	}
 }
 
-func (r DatadogReporter) incidentTitle(prefix string, i Incident) string {
-	return fmt.Sprintf("%s incident '%s': %s",
-		prefix, i.ID, strings.Join(i.TaskTypes(), ", "))
+func (r Datadog) incidentTitle(prefix string, i Incident) string {
+	return fmt.Sprintf("%s incident '%s': %s", prefix, i.ID(), strings.Join(i.TaskTypes(), ", "))
 }
 
-func (r DatadogReporter) eventTitle(prefix string, e Event) string {
-	return fmt.Sprintf("%s event '%s': %s for %s/%s/%d",
-		prefix, e.ID, e.Type, e.DeploymentName, e.JobName, *e.JobIndex)
+func (r Datadog) eventTitle(prefix string, e Event) string {
+	return fmt.Sprintf("%s event '%s': %s for %s/%s", prefix, e.ID, e.Type, e.Instance.Group, e.Instance.ID)
 }
 
-func (r DatadogReporter) eventTags(incidentID string, e Event) []string {
+func (r Datadog) eventTags(incidentID string, e Event) []string {
 	return []string{
 		"incident:" + incidentID,
 		"event:" + e.ID,
-		"deployment:" + e.DeploymentName,
-		"job:" + e.JobName,
-		fmt.Sprintf("index:%d", *e.JobIndex),
-		fmt.Sprintf("instance:%s/%s/%d", e.DeploymentName, e.JobName, *e.JobIndex),
+		"deployment:" + e.Instance.Deployment,
+		"group:" + e.Instance.Group,
+		fmt.Sprintf("instance:%s/%s", e.Instance.Group, e.Instance.ID),
 	}
 }
 

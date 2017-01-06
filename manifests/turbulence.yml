@@ -1,0 +1,54 @@
+---
+name: turbulence
+
+releases:
+- name: turbulence
+  version: latest
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: latest
+
+instance_groups:
+- name: api
+  instances: 1
+  azs: [z1]
+  jobs:
+  - name: turbulence_api
+    release: turbulence
+    provides:
+      api: {shared: true}
+    properties:
+      password: ((turbulence_api_password))
+      cert: ((turbulence_api_cert))
+      director:
+        host: ((director_ip))
+        ca_cert: ((director_ssl_ca))
+        client: ((director_client))
+        client_secret: ((director_client_secret))
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+    static_ips: [((turbulence_api_ip))]
+
+update:
+  canaries: 1
+  max_in_flight: 1
+  canary_watch_time: 5000-20000
+  update_watch_time: 5000-20000
+
+variables:
+- name: turbulence_api_password
+  type: password
+- name: turbulence_api_ca
+  type: certificate
+  options:
+    common_name: turbulence_api_ca
+- name: turbulence_api_cert
+  type: certificate
+  options:
+    ca: turbulence_api_ca
+    common_name: ((turbulence_api_ip))
+    alternative_names: [((turbulence_api_ip))]

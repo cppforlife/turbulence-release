@@ -1,0 +1,6 @@
+---
+- type: replace
+  path: /instance_groups/name=api/jobs/name=turbulence_api/properties/datadog?
+  value:
+    app_key: ((datadog_app_key))
+    api_key: ((datadog_api_key))

@@ -74,12 +74,7 @@ pre, .prettyprint { border-width: 0; }
 
 .incident-events li {
   overflow: hidden;
-  height: 15px; /* shrink */
 }
-
-.incident-events li.list-group-item-info,
-.incident-events li.list-group-item-success,
-.incident-events li.list-group-item-danger { height: auto; }
 
 .incident-events li > p {
   overflow: hidden;
@@ -114,11 +109,4 @@ pre, .prettyprint { border-width: 0; }
   float: left;
   clear: left;
   margin-right: 15px;
-}
-
-.incident-events .id {
-  width: 70px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }

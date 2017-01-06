@@ -1,4 +1,4 @@
-package incident_test
+package selector_test
 
 import (
 	"errors"
@@ -8,26 +8,26 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
-func ConsistOfLen(length int, expected []int) types.GomegaMatcher {
+func ConsistOfLen(length int, expected []string) types.GomegaMatcher {
 	return &ConsistOfLenMatcher{Length: length, Expected: expected}
 }
 
 type ConsistOfLenMatcher struct {
 	Length   int
-	Expected []int
+	Expected []string
 }
 
 func (m ConsistOfLenMatcher) Match(actual interface{}) (bool, error) {
-	actualInts := actual.([]int)
+	actualStrings := actual.([]string)
 
-	Expect(actualInts).To(HaveLen(m.Length))
+	Expect(actualStrings).To(HaveLen(m.Length))
 
-	err := m.checkUniq(actualInts)
+	err := m.checkUniq(actualStrings)
 	if err != nil {
 		return false, err
 	}
 
-	err = m.checkConsists(actualInts)
+	err = m.checkConsists(actualStrings)
 	if err != nil {
 		return false, err
 	}
@@ -35,8 +35,8 @@ func (m ConsistOfLenMatcher) Match(actual interface{}) (bool, error) {
 	return true, nil
 }
 
-func (m ConsistOfLenMatcher) checkUniq(actual []int) error {
-	seenInts := []int{}
+func (m ConsistOfLenMatcher) checkUniq(actual []string) error {
+	seenInts := []string{}
 
 	for _, i := range actual {
 		for _, j := range seenInts {
@@ -51,7 +51,7 @@ func (m ConsistOfLenMatcher) checkUniq(actual []int) error {
 	return nil
 }
 
-func (m ConsistOfLenMatcher) checkConsists(actual []int) error {
+func (m ConsistOfLenMatcher) checkConsists(actual []string) error {
 	for _, i := range actual {
 		var foundInExpected bool
 

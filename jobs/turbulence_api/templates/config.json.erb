@@ -1,46 +1,27 @@
 <%=
 
-params = {
+JSON.dump(
 	"ListenAddress" => p("listen_address"),
 	"ListenPort" => p("listen_port"),
 
 	"Username" => p("username"),
 	"Password" => p("password"),
 
-	"CertificatePath" => "/var/vcap/jobs/turbulence_api/config/cert.pem",
-	"PrivateKeyPath" => "/var/vcap/jobs/turbulence_api/config/private_key.pem",
+	"CertificatePath" => "/var/vcap/jobs/turbulence_api/config/cert",
+	"PrivateKeyPath" => "/var/vcap/jobs/turbulence_api/config/private_key",
 
 	"Director" => {
 		"Host" => p("director.host"),
 		"Port" => p("director.port"),
-		"CACert" => "", # todo
-		"Username" => p("director.username"),
-		"Password" => p("director.password"),
+		"CACert" => p("director.ca_cert"),
+		"Client" => p("director.client"),
+		"ClientSecret" => p("director.client_secret"),
 	},
 
 	"Datadog" => {
 		"AppKey" => p("datadog.app_key"),
 		"APIKey" => p("datadog.api_key"),
 	},
-}
-
-if_p("cpi_job_name") do |cpi_job_name|
-	params["CPI"] = {
-		"ExePath" => "/var/vcap/jobs/#{cpi_job_name}",
-		"JobsDir" => "/var/vcap/jobs",
-		"PackagesDir" => "/var/vcap/packages",
-	}
-
-	if_p("registry.host") do |host|
-		params["Registry"] = {
-			"Host" => host,
-			"Port" => p("registry.port"),
-			"Username" => p("registry.username"),
-			"Password" => p("registry.password"),
-		}
-	end
-end
-
-JSON.dump(params)
+)
 
 %>
