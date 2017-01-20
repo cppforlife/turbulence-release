@@ -5,7 +5,8 @@ fe605b5 github.com/go-martini/martini/.git
 fa62c19 github.com/martini-contrib/auth/.git
 ec18f83 github.com/martini-contrib/render/.git
 a23f924 github.com/onsi/ginkgo/.git
-f1f0f38 github.com/onsi/gomega/.git
+e85f63a github.com/onsi/gomega/.git
 4e1c556 github.com/oxtoacart/bpool/.git
 9585fd5 github.com/robfig/cron/.git
-a0a72fc github.com/zorkian/go-datadog-api/.git
+c97dc77 github.com/zorkian/go-datadog-api/.git
+a5b47d3 gopkg.in/yaml.v2/.git

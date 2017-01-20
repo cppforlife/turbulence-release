@@ -11,17 +11,17 @@ rm -f $deps
 cd src
 
 # Remove all deps
-find * -maxdepth 2 -mindepth 2 -type d | grep -v turbulence | xargs rm -rf
+find * -maxdepth 3 -type d | grep -v '^github.com\(/cppforlife\(/turbulence.*\)*\)*$' | xargs rm -rf
 
 go get -d -t -v github.com/cppforlife/turbulence/...
 
 # Remove all .git folders
-dirs=$(find * -maxdepth 3 -mindepth 3 -type d -name '.git')
+dirs=$(find * -type d -name '.git')
 
 for dir in $dirs; do
-	# Capture deps info
-	echo "$(cd $dir/.. && git rev-parse --short HEAD) $dir" >> $deps
+  # Capture deps info
+  echo "$(cd $dir/.. && git rev-parse --short HEAD) $dir" >> $deps
 
-	# Remove .git directory
-	rm -rf $dir
+  # Remove .git directory
+  rm -rf $dir
 done
