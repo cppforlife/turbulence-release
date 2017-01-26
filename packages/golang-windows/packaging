@@ -1,4 +1,4 @@
-$path="golang-windows/go1.7.3.windows-amd64.zip"
+$path="golang-windows/go1.7.4.windows-amd64.zip"
 
 try {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
