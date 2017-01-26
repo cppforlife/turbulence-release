@@ -1,0 +1,17 @@
+<%=
+
+api = link("api")
+
+JSON.dump(
+	"AgentID" => "_agent_id_",
+
+	"API" => {
+		"Host" => api.instances.first.address,
+		"Port" => api.p("listen_port"),
+		"CACert" => api.p("ca_cert"),
+		"Username" => api.p("username"),
+		"Password" => api.p("password"),
+	},
+)
+
+%>

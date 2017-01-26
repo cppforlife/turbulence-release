@@ -1,0 +1,20 @@
+---
+name: turbulence_agent_windows
+
+templates:
+  ca_cert.erb: config/ca_cert
+  config.json.erb: config/config.json
+  pre-start.ps1.erb: bin/pre-start.ps1
+
+packages:
+- turbulence-windows
+- stress-windows
+
+consumes:
+- name: api
+  type: turbulence_api
+
+properties:
+  debug:
+    description: "Show debug logs"
+    default: true

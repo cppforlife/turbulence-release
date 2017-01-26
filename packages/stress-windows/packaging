@@ -1,0 +1,23 @@
+$STRESS_ZIP = "stress/stress-windows-1.0.4.zip"
+try {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    function Unzip
+    {
+        param([string]$zipfile, [string]$outpath)
+
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
+    }
+
+    Unzip "${STRESS_ZIP}" "${env:BOSH_INSTALL_TARGET}"
+
+    # Add to global path
+    $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
+    $newpath = "${oldpath};${env:BOSH_INSTALL_TARGET}"
+    Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newpath
+} catch {
+    Write-Error "Error installing stress"
+    Write-Error $_.Exception.Message
+    Exit 1
+}
+Exit 0
+

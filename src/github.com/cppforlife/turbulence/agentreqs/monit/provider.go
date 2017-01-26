@@ -2,6 +2,7 @@ package monit
 
 import (
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -26,6 +27,10 @@ func NewClientProvider(fs boshsys.FileSystem, logger boshlog.Logger) ClientProvi
 }
 
 func (p ClientProvider) Get() (Client, error) {
+	if runtime.GOOS == "windows" {
+		return NewHTTPClient("", "", "", nil, p.logger), nil
+	}
+
 	credsStr, err := p.fs.ReadFileString(monitCredsPath)
 	if err != nil {
 		return nil, bosherr.WrapError(err, "Getting monit credentials")

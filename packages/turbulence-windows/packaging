@@ -1,0 +1,32 @@
+try {
+    $BOSH_INSTALL_TARGET = Resolve-Path "${env:BOSH_INSTALL_TARGET}"
+
+    $env:GOROOT="C:\var\vcap\packages\golang-windows\go"
+    $env:GOPATH="${PWD}"
+    $env:PATH="${env:GOROOT}\bin;${env:PATH}"
+    $env:GO15VENDOREXPERIMENT=1
+
+    New-Item -Type directory -Path "..\src" -Force
+    Copy-Item -Recurse -Path "*" -Destination "..\src" -Force
+    Move-Item -Path "..\src" -Destination ".\src"
+
+    go.exe build -o "${BOSH_INSTALL_TARGET}/bin/api.exe" github.com/cppforlife/turbulence/main
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Error: compiling: github.com/cppforlife/turbulence/main"
+        Exit $LASTEXITCODE
+    }
+
+    go.exe build -o "${BOSH_INSTALL_TARGET}/bin/agent.exe" github.com/cppforlife/turbulence/agent
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Error: compiling: github.com/cppforlife/turbulence/agent"
+        Exit $LASTEXITCODE
+    }
+
+    Copy-Item -Recurse -Path "src/github.com/cppforlife/turbulence/public" -Destination "${BOSH_INSTALL_TARGET}"
+    Copy-Item -Recurse -Path "src/github.com/cppforlife/turbulence/templates" -Destination "${BOSH_INSTALL_TARGET}"
+} catch {
+    Write-Error $_.Exception.Message
+    Exit 1
+}
+
+Exit 0
