@@ -39,6 +39,9 @@ func (c Factory) director() (boshdir.Director, error) {
 			return nil, err
 		}
 
+		dirConfig.Client = ""
+		dirConfig.ClientSecret = ""
+
 		dirConfig.TokenFunc = boshuaa.NewClientTokenSession(uaa).TokenFunc
 	}
 
