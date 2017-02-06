@@ -1,12 +1,14 @@
 builds:
-  4dd43107-866b-4809-aef2-6ce55958c7bc:
-    version: "0.1"
   12e24db2-2226-48a9-a8cd-2b801fe16351:
     version: "0.4"
   17022856-8f11-4737-bf6a-af646ef02325:
     version: "0.3"
   1abc14aa-a452-4bec-80f7-2880f54b6d46:
     version: "0.2"
+  4dd43107-866b-4809-aef2-6ce55958c7bc:
+    version: "0.1"
   b90d6398-ccda-4f64-5035-be1f8bbd741f:
     version: "0.5"
+  faf38e36-021c-43d2-40f4-6550d1578c47:
+    version: "0.6"
 format-version: "2"
