@@ -81,7 +81,7 @@ Available selector rules:
   - set `Limit` (string; optional)
 
 - ID
-  - set `In` (array of strings; optional)
+  - set `Values` (array of strings; optional)
   - set `Limit` (string; optional)
 
 Limits default to 100%. Name defaults to '*' and wildcard matches are supported.
@@ -101,7 +101,7 @@ Limits default to 100%. Name defaults to '*' and wildcard matches are supported.
 		"Limit": "5"
 	},
 	"ID": {
-		"In": ["53c5ae69-4622-4103-9766-230adcf3baef"],
+		"Values": ["53c5ae69-4622-4103-9766-230adcf3baef"],
 		"Limit": "5"
 	}
 }
