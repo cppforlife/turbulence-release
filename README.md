@@ -17,6 +17,7 @@ Next steps:
 
 - [Configuration doc](docs/config.md) on how to configure API server and agents
 - [API doc](docs/api.md) on how to use Turbulence
+- [API client doc](docs/client.md) on how to use Turbulence GO client
 - [Development doc](docs/dev.md) on how to contribute
 
 --

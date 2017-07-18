@@ -1,0 +1,7 @@
+- type: replace
+  path: /releases/name=turbulence/version
+  value: create
+
+- type: replace
+  path: /releases/name=turbulence/url?
+  value: file://.

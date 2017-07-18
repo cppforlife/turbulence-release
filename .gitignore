@@ -17,15 +17,14 @@ blobs
 
 /*deployment.yml
 
-.vagrant/
-
 /bin
 /pkg
 
 .hg
 .bzr
 
-ca/certs/
-
 # ctags
 tags
+
+creds.yml
+tests/creds.yml
