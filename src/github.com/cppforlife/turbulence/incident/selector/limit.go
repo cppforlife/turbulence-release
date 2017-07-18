@@ -20,7 +20,15 @@ type Limit struct { // e.g. 1, 0-1, 0%-20%, 20%
 	applied    bool // by default limit is equivalent to 100%
 }
 
-func NewLimitorFromString(s string) (Limit, error) {
+func MustNewLimitFromString(s string) Limit {
+	l, err := NewLimitFromString(s)
+	if err != nil {
+		panic(err.Error())
+	}
+	return l
+}
+
+func NewLimitFromString(s string) (Limit, error) {
 	matches := limitRegexp.FindStringSubmatch(s)
 	if len(matches) == 0 {
 		return Limit{}, fmt.Errorf("Limit must match '%s'", limitRegexp)
@@ -138,7 +146,7 @@ func (l *Limit) UnmarshalJSON(s []byte) error {
 		return nil
 	}
 
-	limit, err := NewLimitorFromString(strings.Replace(string(s), `"`, "", -1))
+	limit, err := NewLimitFromString(strings.Replace(string(s), `"`, "", -1))
 	if err != nil {
 		return err
 	}

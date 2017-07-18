@@ -11,21 +11,13 @@ import (
 	. "github.com/cppforlife/turbulence/incident/selector"
 )
 
-func MustNewLimitorFromString(s string) Limitor {
-	l, err := NewLimitorFromString(s)
-	if err != nil {
-		panic(err.Error())
-	}
-	return l
-}
-
 var _ = Describe("Limit", func() {
 	Describe("Limit", func() {
 		limitTests := func() {
 			Context("when specified limit is 0", func() {
 				Context("as number", func() {
 					It("returns no indices", func() {
-						limit := MustNewLimitorFromString("0")
+						limit := MustNewLimitFromString("0")
 						Expect(limit.Limit([]string{})).To(HaveLen(0))
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(HaveLen(0))
 					})
@@ -33,7 +25,7 @@ var _ = Describe("Limit", func() {
 
 				Context("as percentage", func() {
 					It("returns no indices", func() {
-						limit := MustNewLimitorFromString("0%")
+						limit := MustNewLimitFromString("0%")
 						Expect(limit.Limit([]string{})).To(HaveLen(0))
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(HaveLen(0))
 					})
@@ -43,23 +35,23 @@ var _ = Describe("Limit", func() {
 			Context("when specified limit is smaller than number of available indices", func() {
 				Context("as number", func() {
 					It("returns all available indices", func() {
-						limit := MustNewLimitorFromString("2")
+						limit := MustNewLimitFromString("2")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOfLen(2, []string{"1", "2", "3"}))
 					})
 				})
 
 				Context("as percentage", func() {
 					It("returns all available indices", func() {
-						limit := MustNewLimitorFromString("33%")
+						limit := MustNewLimitFromString("33%")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOfLen(1, []string{"1", "2", "3"}))
 
-						limit = MustNewLimitorFromString("34%")
+						limit = MustNewLimitFromString("34%")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOfLen(2, []string{"1", "2", "3"}))
 
-						limit = MustNewLimitorFromString("66%")
+						limit = MustNewLimitFromString("66%")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOfLen(2, []string{"1", "2", "3"}))
 
-						limit = MustNewLimitorFromString("67%")
+						limit = MustNewLimitFromString("67%")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOfLen(3, []string{"1", "2", "3"}))
 					})
 				})
@@ -68,14 +60,14 @@ var _ = Describe("Limit", func() {
 			Context("when specified limit is same as number of available indices", func() {
 				Context("as number", func() {
 					It("returns all available indices", func() {
-						limit := MustNewLimitorFromString("3")
+						limit := MustNewLimitFromString("3")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOf([]string{"1", "2", "3"}))
 					})
 				})
 
 				Context("as percentage", func() {
 					It("returns all available indices", func() {
-						limit := MustNewLimitorFromString("100%")
+						limit := MustNewLimitFromString("100%")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOf([]string{"1", "2", "3"}))
 					})
 				})
@@ -84,21 +76,21 @@ var _ = Describe("Limit", func() {
 			Context("when specified limit is larger than number of available indices", func() {
 				Context("as number", func() {
 					It("returns all available indices", func() {
-						limit := MustNewLimitorFromString("5")
+						limit := MustNewLimitFromString("5")
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOf([]string{"1", "2", "3"}))
 					})
 				})
 
 				Context("as percentage", func() {
 					It("returns all available indices", func() {
-						limit := MustNewLimitorFromString("100%") // cannot be over 100%
+						limit := MustNewLimitFromString("100%") // cannot be over 100%
 						Expect(limit.Limit([]string{"1", "2", "3"})).To(ConsistOf([]string{"1", "2", "3"}))
 					})
 				})
 			})
 
 			It("is fair enough in choosing indices", func() {
-				limit := MustNewLimitorFromString("1")
+				limit := MustNewLimitFromString("1")
 				counts := map[string]int{}
 
 				for i := 0; i < 10000; i++ {
