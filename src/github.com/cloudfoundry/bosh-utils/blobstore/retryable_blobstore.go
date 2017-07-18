@@ -7,14 +7,14 @@ import (
 )
 
 type retryableBlobstore struct {
-	blobstore Blobstore
+	blobstore DigestBlobstore
 	maxTries  int
 
 	logTag string
 	logger boshlog.Logger
 }
 
-func NewRetryableBlobstore(blobstore Blobstore, maxTries int, logger boshlog.Logger) Blobstore {
+func NewRetryableBlobstore(blobstore DigestBlobstore, maxTries int, logger boshlog.Logger) DigestBlobstore {
 	return retryableBlobstore{
 		blobstore: blobstore,
 		maxTries:  maxTries,
@@ -27,7 +27,7 @@ func (b retryableBlobstore) Get(blobID string, fingerprint boshcrypto.Digest) (s
 	var fileName string
 	var lastErr error
 
-	for i := 0; i < b.maxTries; i++ {
+	for i := 1; i <= b.maxTries; i++ {
 		fileName, lastErr = b.blobstore.Get(blobID, fingerprint)
 		if lastErr == nil {
 			return fileName, nil
@@ -48,21 +48,21 @@ func (b retryableBlobstore) Delete(blobID string) error {
 	return b.blobstore.Delete(blobID)
 }
 
-func (b retryableBlobstore) Create(fileName string) (string, error) {
-	var blobID string
+func (b retryableBlobstore) Create(fileName string) (string, boshcrypto.MultipleDigest, error) {
 	var lastErr error
 
-	for i := 0; i < b.maxTries; i++ {
-		blobID, lastErr = b.blobstore.Create(fileName)
-		if lastErr == nil {
-			return blobID, nil
+	for i := 1; i <= b.maxTries; i++ {
+		blobID, digest, thisErr := b.blobstore.Create(fileName)
+		if thisErr == nil {
+			return blobID, digest, nil
 		}
 
+		lastErr = thisErr
 		b.logger.Info(b.logTag,
 			"Failed to create blob with error %s, attempt %d out of %d", lastErr.Error(), i, b.maxTries)
 	}
 
-	return "", bosherr.WrapError(lastErr, "Creating blob in inner blobstore")
+	return "", boshcrypto.MultipleDigest{}, bosherr.WrapError(lastErr, "Creating blob in inner blobstore")
 }
 
 func (b retryableBlobstore) Validate() error {

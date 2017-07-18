@@ -27,6 +27,8 @@ func (c tarballCompressor) CompressSpecificFilesInDir(dir string, files []string
 		return "", bosherr.WrapError(err, "Creating temporary file for tarball")
 	}
 
+	defer tarball.Close()
+
 	tarballPath := tarball.Name()
 
 	args := []string{"czf", tarballPath, "-C", dir}
@@ -49,7 +51,7 @@ func (c tarballCompressor) DecompressFileToDir(tarballPath string, dir string, o
 		sameOwnerOption = "--same-owner"
 	}
 
-	_, _, _, err := c.cmdRunner.RunCommand("tar", sameOwnerOption, "-xzvf", tarballPath, "-C", dir)
+	_, _, _, err := c.cmdRunner.RunCommand("tar", sameOwnerOption, "-xzf", tarballPath, "-C", dir)
 	if err != nil {
 		return bosherr.WrapError(err, "Shelling out to tar")
 	}

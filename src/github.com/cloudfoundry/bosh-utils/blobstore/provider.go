@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 
+	boshcrypto "github.com/cloudfoundry/bosh-utils/crypto"
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	"github.com/cloudfoundry/bosh-utils/system"
@@ -16,11 +17,11 @@ const (
 )
 
 type Provider struct {
-	fs             system.FileSystem
-	runner         system.CmdRunner
-	configDir      string
-	uuidGen        boshuuid.Generator
-	logger         boshlog.Logger
+	fs        system.FileSystem
+	runner    system.CmdRunner
+	configDir string
+	uuidGen   boshuuid.Generator
+	logger    boshlog.Logger
 }
 
 func NewProvider(
@@ -30,15 +31,15 @@ func NewProvider(
 	logger boshlog.Logger,
 ) Provider {
 	return Provider{
-		uuidGen:        boshuuid.NewGenerator(),
-		fs:             fs,
-		runner:         runner,
-		configDir:      configDir,
-		logger:         logger,
+		uuidGen:   boshuuid.NewGenerator(),
+		fs:        fs,
+		runner:    runner,
+		configDir: configDir,
+		logger:    logger,
 	}
 }
 
-func (p Provider) Get(storeType string, options map[string]interface{}) (Blobstore, error) {
+func (p Provider) Get(storeType string, options map[string]interface{}) (DigestBlobstore, error) {
 	var blobstore Blobstore
 
 	switch storeType {
@@ -63,12 +64,14 @@ func (p Provider) Get(storeType string, options map[string]interface{}) (Blobsto
 		)
 	}
 
-	blobstore = NewRetryableBlobstore(NewDigestVerifiableBlobstore(blobstore), 3, p.logger)
+	createAlgos := []boshcrypto.Algorithm{boshcrypto.DigestAlgorithmSHA1}
+	verifiableBlobstore := NewDigestVerifiableBlobstore(blobstore, p.fs, createAlgos)
+	digestBlobstore := NewRetryableBlobstore(verifiableBlobstore, 3, p.logger)
 
 	err := blobstore.Validate()
 	if err != nil {
 		return nil, bosherr.WrapError(err, "Validating blobstore")
 	}
 
-	return blobstore, nil
+	return digestBlobstore, nil
 }

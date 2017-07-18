@@ -7,7 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	. "github.com/cloudfoundry/bosh-utils/httpclient"
+	"github.com/cloudfoundry/bosh-utils/httpclient/fakes"
 )
+
+var _ HTTPClient = &fakes.FakeHTTPClient{}
 
 var _ = Describe("Default HTTP clients", func() {
 	Describe("DefaultClient", func() {
@@ -17,11 +20,19 @@ var _ = Describe("Default HTTP clients", func() {
 			Expect(client).To(Equal(DefaultClient))
 		})
 
-		It("disables keep alive", func() {
+		It("disables HTTP Transport keep-alive (disables HTTP/1.[01] connection reuse)", func() {
 			var client *http.Client
 			client = DefaultClient
 
 			Expect(client.Transport.(*http.Transport).DisableKeepAlives).To(Equal(true))
+		})
+
+		It("disables HTTP/2", func() {
+			var client *http.Client
+			client = DefaultClient
+
+			Expect(client.Transport.(*http.Transport).TLSNextProto).ToNot(BeNil())
+			Expect(client.Transport.(*http.Transport).TLSNextProto).To(BeEmpty())
 		})
 	})
 
@@ -31,7 +42,7 @@ var _ = Describe("Default HTTP clients", func() {
 			Expect(client.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify).To(Equal(false))
 		})
 
-		It("disables keep alive", func() {
+		It("disables HTTP Transport keep-alive (disables HTTP/1.[01] connection reuse)", func() {
 			client := CreateDefaultClient(nil)
 			Expect(client.Transport.(*http.Transport).DisableKeepAlives).To(Equal(true))
 		})
@@ -43,7 +54,7 @@ var _ = Describe("Default HTTP clients", func() {
 			Expect(client.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify).To(Equal(true))
 		})
 
-		It("disables keep alive", func() {
+		It("disables HTTP Transport keep-alive (disables HTTP/1.[01] connection reuse)", func() {
 			client := CreateDefaultClientInsecureSkipVerify()
 			Expect(client.Transport.(*http.Transport).DisableKeepAlives).To(Equal(true))
 		})
