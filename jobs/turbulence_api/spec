@@ -43,7 +43,7 @@ properties:
   director.port:
     description: "Director port"
     default: 25555
-  director.ca_cert:
+  director.cert.ca:
     description: "CA certificate to verify Director certificate (uses system CA certificates by default)"
     default: ""
   director.client:

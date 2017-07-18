@@ -24,7 +24,8 @@ instance_groups:
       cert: ((turbulence_api_cert))
       director:
         host: ((director_ip))
-        ca_cert: ((director_ssl_ca))
+        cert:
+          ca: ((director_ssl.ca))
         client: ((director_client))
         client_secret: ((director_client_secret))
   vm_type: default

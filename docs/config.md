@@ -13,13 +13,16 @@ API server uses Director API to find all instances in all deployments. It also c
 Director UAA integration is supported.
 
 ```
-$ bosh -n -d turbulence deploy ./manifests/turbulence.yml \
+$ bosh -n -d turbulence deploy ./manifests/example.yml \
   -v turbulence_api_ip=10.244.0.34 \
   -v director_ip=192.168.50.6 \
-  --var-file director_ssl_ca=/tmp/director-ca \
   -v director_client=turbulence \
   -v director_client_secret=... \
-  --vars-store ./creds.yml
+  --var-file director_ssl.ca=/tmp/director-ca \
+  --vars-store /tmp/turbulence.yml
+
+$ bosh int /tmp/turbulence.yml --path /turbulence_api_password
+...
 ```
 
 ## Agent configuration
@@ -49,7 +52,7 @@ instance_groups:
 API server can be configured to post events to Datadog for easier event correlation.
 
 ```
-$ bosh -n -d turbulence deploy ./manifests/turbulence.yml \
+$ bosh -n -d turbulence deploy ./manifests/example.yml \
   -o ./manifests/datadog.yml \
   -v datadog_app_key=... \
   -v datadog_api_key=... \
