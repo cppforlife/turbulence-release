@@ -15,6 +15,8 @@ type FillDiskOptions struct {
 	Temporary  bool
 }
 
+func (FillDiskOptions) _private() {}
+
 type FillDiskTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      FillDiskOptions

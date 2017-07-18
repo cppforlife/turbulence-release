@@ -5,7 +5,7 @@ set -e
 body='
 {
 	"Tasks": [{
-		"Type": "kill"
+		"Type": "Kill"
 	}],
 
 	"Selector": {

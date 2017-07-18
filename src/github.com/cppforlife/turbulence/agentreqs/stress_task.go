@@ -22,6 +22,8 @@ type StressOptions struct {
 	HDDWorkerBytes string // Sizes may be suffixed with B,K,M,G
 }
 
+func (StressOptions) _private() {}
+
 type StressTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      StressOptions

@@ -6,7 +6,7 @@ body='
 
 	"Incident": {
 		"Tasks": [{
-			"Type": "stress",
+			"Type": "Stress",
 			"Timeout": "30s",
 
 			"NumCPUWorkers": 1

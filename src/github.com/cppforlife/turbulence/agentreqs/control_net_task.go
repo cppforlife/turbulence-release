@@ -24,6 +24,8 @@ type ControlNetOptions struct {
 	// reset: tc qdisc del dev eth0 root
 }
 
+func (ControlNetOptions) _private() {}
+
 type ControlNetTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      ControlNetOptions

@@ -25,6 +25,8 @@ type KillProcessOptions struct {
 	// If names are empty, randomly selected monitored process is killed
 }
 
+func (KillProcessOptions) _private() {}
+
 type KillProcessTask struct {
 	monitClient monit.Client
 	cmdRunner   boshsys.CmdRunner

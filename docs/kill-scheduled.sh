@@ -6,7 +6,7 @@ body='
 
 	"Incident": {
 		"Tasks": [{
-			"Type": "kill"
+			"Type": "Kill"
 		}],
 
 		"Selector": {

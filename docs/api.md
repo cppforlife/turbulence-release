@@ -30,7 +30,7 @@ Create request:
 ```json
 {
 	"Tasks": [{
-		"Type": "stress",
+		"Type": "Stress",
 		"Timeout": "10m",
 
 		"NumCPUWorkers": 1
@@ -167,7 +167,7 @@ Example:
 
 ```json
 {
-	"Type": "kill"
+	"Type": "Kill"
 }
 ```
 
@@ -185,7 +185,7 @@ Example:
 
 ```json
 {
-	"Type": "kill-process",
+	"Type": "KillProcess",
 	"MonitoredProcessName": "*worker*"
 }
 ```
@@ -214,7 +214,7 @@ Example:
 
 ```json
 {
-	"Type": "stress",
+	"Type": "Stress",
 	"Timeout": "10m", // Times may be suffixed with s,m,h,d,y
 
 	"NumCPUWorkers": 1,
@@ -240,7 +240,7 @@ Example:
 
 ```json
 {
-	"Type": "firewall",
+	"Type": "Firewall",
 	"Timeout": "10m" // Times may be suffixed with ms,s,m,h
 }
 ```
@@ -265,7 +265,7 @@ Example:
 
 ```json
 {
-	"Type": "control-net",
+	"Type": "ControlNet",
 	"Timeout": "10m", // Times may be suffixed with ms,s,m,h
 
 	"Delay": "50ms"
@@ -287,7 +287,7 @@ Example:
 
 ```json
 {
-	"Type": "fill-disk",
+	"Type": "FillDisk",
 	"Persistent": true
 }
 ```
@@ -309,7 +309,7 @@ Example:
 
 ```json
 {
-	"Type": "shutdown",
+	"Type": "Shutdown",
 	"Crash": true
 }
 ```

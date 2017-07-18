@@ -19,6 +19,8 @@ type ShutdownOptions struct {
 	Sysrq string
 }
 
+func (ShutdownOptions) _private() {}
+
 type ShutdownTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      ShutdownOptions

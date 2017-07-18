@@ -17,6 +17,8 @@ type FirewallOptions struct {
 	BlockBOSHAgent bool
 }
 
+func (FirewallOptions) _private() {}
+
 type FirewallTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      FirewallOptions

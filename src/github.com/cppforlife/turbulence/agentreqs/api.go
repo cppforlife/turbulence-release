@@ -15,7 +15,9 @@ type TaskReq struct {
 // TaskOptionsSlice is used for unmarshalling different source types
 type TaskOptionsSlice []TaskOptions
 
-type TaskOptions interface{}
+type TaskOptions interface {
+	_private()
+}
 
 func TaskOptsType(taskOpts TaskOptions) string {
 	t := fmt.Sprintf("%T", taskOpts)
@@ -38,34 +40,34 @@ func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
 				return bosherr.WrapErrorf(err, "Marshalling task options")
 			}
 
-			var opts interface{}
+			var opts TaskOptions
 
 			switch {
-			case optType == "kill":
+			case optType == TaskOptsType(KillOptions{}):
 				var o KillOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == "kill-process":
+			case optType == TaskOptsType(KillProcessOptions{}):
 				var o KillProcessOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == "stress":
+			case optType == TaskOptsType(StressOptions{}):
 				var o StressOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == "control-net":
+			case optType == TaskOptsType(ControlNetOptions{}):
 				var o ControlNetOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == "firewall":
+			case optType == TaskOptsType(FirewallOptions{}):
 				var o FirewallOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == "fill-disk":
+			case optType == TaskOptsType(FillDiskOptions{}):
 				var o FillDiskOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == "shutdown":
+			case optType == TaskOptsType(ShutdownOptions{}):
 				var o ShutdownOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
@@ -84,4 +86,43 @@ func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (s TaskOptionsSlice) MarshalJSON() ([]byte, error) {
+	for i, o := range s {
+		switch typedO := o.(type) {
+		case KillOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		case KillProcessOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		case StressOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		case ControlNetOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		case FirewallOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		case FillDiskOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		case ShutdownOptions:
+			typedO.Type = TaskOptsType(typedO)
+			s[i] = typedO
+
+		default:
+			return nil, bosherr.Errorf("Unknown task type '%T'", o)
+		}
+	}
+
+	return json.Marshal([]TaskOptions(s))
 }
