@@ -2,6 +2,7 @@ package agentreqs
 
 import (
 	"fmt"
+	"runtime"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
@@ -24,15 +25,16 @@ func (ShutdownOptions) _private() {}
 type ShutdownTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      ShutdownOptions
+	logger    boshlog.Logger
 }
 
-func NewShutdownTask(cmdRunner boshsys.CmdRunner, opts ShutdownOptions, _ boshlog.Logger) ShutdownTask {
-	return ShutdownTask{cmdRunner, opts}
+func NewShutdownTask(cmdRunner boshsys.CmdRunner, opts ShutdownOptions, logger boshlog.Logger) ShutdownTask {
+	return ShutdownTask{cmdRunner, opts, logger}
 }
 
 func (t ShutdownTask) Execute() error {
 	if t.opts.Crash {
-		return t.sysrq("c")
+		return t.crash()
 	}
 
 	if len(t.opts.Sysrq) > 0 {
@@ -46,7 +48,20 @@ func (t ShutdownTask) Execute() error {
 	return t.halt(t.opts.Force)
 }
 
+func (t ShutdownTask) crash() error {
+	if runtime.GOOS == "windows" {
+		t.logger.Info("ShutdownTask", "crash not implemented on Windows - stopping with force")
+		return t.halt(true)
+	}
+	return t.sysrq("c")
+}
+
 func (t ShutdownTask) sysrq(val string) error {
+	if runtime.GOOS == "windows" {
+		t.logger.Info("ShutdownTask", "syrq not implemented on Windows")
+		return nil
+	}
+
 	cmd := fmt.Sprintf("echo 1 > /proc/sys/kernel/sysrq && echo %s > /proc/sysrq-trigger", val)
 
 	_, _, _, err := t.cmdRunner.RunCommand("bash", "-c", cmd)
@@ -58,13 +73,22 @@ func (t ShutdownTask) sysrq(val string) error {
 }
 
 func (t ShutdownTask) halt(force bool) error {
-	var forceArg []string
-
-	if force {
-		forceArg = append(forceArg, "--force")
+	var args []string
+	var command string
+	if runtime.GOOS == "windows" {
+		command = "-Command"
+		args = []string{"Stop-Computer"}
+		if force {
+			args = append(args, "-Force")
+		}
+	} else {
+		command = "halt"
+		if force {
+			args = append(args, "--force")
+		}
 	}
 
-	_, _, _, err := t.cmdRunner.RunCommand("halt", forceArg...)
+	_, _, _, err := t.cmdRunner.RunCommand(command, args...)
 	if err != nil {
 		return bosherr.WrapError(err, "Halting")
 	}
@@ -73,13 +97,22 @@ func (t ShutdownTask) halt(force bool) error {
 }
 
 func (t ShutdownTask) reboot(force bool) error {
-	var forceArg []string
-
-	if force {
-		forceArg = append(forceArg, "--force")
+	var args []string
+	var command string
+	if runtime.GOOS == "windows" {
+		command = "-Command"
+		args = []string{"Restart-Computer"}
+		if force {
+			args = append(args, "-Force")
+		}
+	} else {
+		command = "reboot"
+		if force {
+			args = append(args, "--force")
+		}
 	}
 
-	_, _, _, err := t.cmdRunner.RunCommand("reboot", forceArg...)
+	_, _, _, err := t.cmdRunner.RunCommand(command, args...)
 	if err != nil {
 		return bosherr.WrapError(err, "Rebooting")
 	}

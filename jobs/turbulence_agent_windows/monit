@@ -1,0 +1,9 @@
+{
+  "processes": [
+    {
+      "name": "turbulence-windows",
+      "executable": "/var/vcap/packages/turbulence-windows/bin/agent.exe",
+      "args": [ "-configPath", "/var/vcap/jobs/turbulence_agent_windows/config/config.json" ]
+    }
+  ]
+}

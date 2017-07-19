@@ -1,3 +1,6 @@
+golang-windows/go1.7.4.windows-amd64.zip:
+  size: 90409580
+  sha: a0da2f5d67e5b800eba811a34ca4b2aa22cca678
 golang/go1.6.2.linux-amd64.tar.gz:
   size: 84840658
   object_id: f1833f76-ad8b-4bef-55cd-a9fab4441299
@@ -6,3 +9,6 @@ stress/stress-1.0.4.tar.gz:
   size: 191800
   object_id: 8c4a0c3b-348e-4367-8e2b-8c2742c5db79
   sha: e1533bc704928ba6e26a362452e6db8fd58b1f0b
+stress/stress-windows-1.0.4.zip:
+  size: 1275268
+  sha: 45117dada9dcf3982759e163632c4c6669fbdeb5

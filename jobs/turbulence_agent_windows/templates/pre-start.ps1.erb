@@ -1,0 +1,26 @@
+$ErrorActionPreference = "Stop";
+trap { $host.SetShouldExit(1) }
+
+$SETTINGS_FILE = "C:\var\vcap\bosh\settings.json"
+$CONFIG_FILE = "C:\var\vcap\jobs\turbulence_agent_windows\config\config.json"
+
+try {
+    $vmID = (Get-Content -Raw $SETTINGS_FILE | ConvertFrom-Json).agent_id
+
+    $config = (Get-Content -Raw $CONFIG_FILE | ConvertFrom-Json)
+    $config.AgentID = $vmID
+
+    $config | ConvertTo-Json | Set-Content $CONFIG_FILE
+} catch {
+    Write-Error $_.Exception.Message
+    Exit 1
+}
+
+$REG_KEY='Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment'
+$oldpath = (Get-ItemProperty -Path $REG_KEY -Name PATH).path
+$newpath = "${oldpath};C:\var\vcap\packages\stress-windows"
+Set-ItemProperty -Path $REG_KEY -Name PATH -Value $newpath
+
+SETX /M PATH $newpath
+
+Exit 0

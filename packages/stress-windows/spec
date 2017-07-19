@@ -1,0 +1,5 @@
+---
+name: stress-windows
+
+files:
+- stress/stress-windows-1.0.4.zip

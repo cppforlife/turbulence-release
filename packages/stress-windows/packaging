@@ -1,0 +1,16 @@
+$ErrorActionPreference = "Stop";
+trap { $host.SetShouldExit(1) }
+
+$STRESS_ZIP = "stress/stress-windows-1.0.4.zip"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function Unzip
+{
+  param([string]$zipfile, [string]$outpath)
+
+  [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
+}
+
+Unzip "${STRESS_ZIP}" "${env:BOSH_INSTALL_TARGET}"
+Exit 0
+
