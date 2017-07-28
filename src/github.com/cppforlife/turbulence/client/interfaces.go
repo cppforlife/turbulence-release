@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/cppforlife/turbulence/incident"
-	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/tasks"
 )
 
@@ -17,13 +16,8 @@ type Turbulence interface {
 type Incident interface {
 	Wait() // todo add timeout?
 
-	Tasks() []Task
 	TasksOfType(tasks.Options) []Task
-
-	// EventsOfType returns list events that match particular options type
-	// Example: incident.EventsOfType(tasks.KillOptions{})
-	EventsOfType(tasks.Options) []reporter.EventResponse
-	HasEventErrors() bool
+	HasTaskErrors() bool
 
 	// ExecutionStartedAt is expected to always return time,
 	// unlike ExecutionCompletedAt which may return nil
@@ -32,10 +26,23 @@ type Incident interface {
 	ExecutionCompletedAt() *time.Time
 }
 
-var _ Incident = &IncidentImpl{}
+var _ Incident = IncidentImpl{}
 
 type Task interface {
 	Stop()
+
+	Instance() Instance
+	Error() string
+
+	ExecutionStartedAt() time.Time
+	ExecutionCompletedAt() *time.Time
 }
 
-var _ Task = &TaskImpl{}
+var _ Task = TaskImpl{}
+
+type Instance struct {
+	ID         string
+	Group      string
+	Deployment string
+	AZ         string
+}

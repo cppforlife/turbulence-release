@@ -14,7 +14,7 @@ func (t TurbulenceImpl) CreateIncident(req incident.Request) Incident {
 	resp, err := t.client.CreateIncident(req)
 	panicIfErr(err, "create incident")
 
-	incident := &IncidentImpl{
+	incident := IncidentImpl{
 		client: t.client,
 		id:     resp.ID,
 	}

@@ -49,11 +49,11 @@ var _ = Describe("Stress", func() {
 			inc := client.CreateIncident(req)
 			inc.Wait()
 
-			Expect(inc.HasEventErrors()).To(BeTrue())
+			Expect(inc.HasTaskErrors()).To(BeTrue())
 
-			events := inc.EventsOfType(tubtasks.StressOptions{})
-			Expect(events).To(HaveLen(1))
-			Expect(events[0].Error).To(ContainSubstring("Task execution: Must specify at least 1 type of worker"))
+			tasks := inc.TasksOfType(tubtasks.StressOptions{})
+			Expect(tasks).To(HaveLen(1))
+			Expect(tasks[0].Error()).To(ContainSubstring("Task execution: Must specify at least 1 type of worker"))
 		}
 
 		req.Tasks = tubtasks.OptionsSlice{
@@ -67,10 +67,10 @@ var _ = Describe("Stress", func() {
 			inc := client.CreateIncident(req)
 			inc.Wait()
 
-			Expect(inc.HasEventErrors()).To(BeFalse())
+			Expect(inc.HasTaskErrors()).To(BeFalse())
 
-			events := inc.EventsOfType(tubtasks.StressOptions{})
-			Expect(events).To(HaveLen(1))
+			tasks := inc.TasksOfType(tubtasks.StressOptions{})
+			Expect(tasks).To(HaveLen(1))
 
 			duration := inc.ExecutionCompletedAt().Sub(inc.ExecutionStartedAt())
 			Expect(duration).To(BeNumerically(">=", 30*time.Second))
@@ -93,10 +93,7 @@ var _ = Describe("Stress", func() {
 			tasks[0].Stop()
 			inc.Wait()
 
-			Expect(inc.HasEventErrors()).To(BeFalse())
-
-			events := inc.EventsOfType(tubtasks.StressOptions{})
-			Expect(events).To(HaveLen(1))
+			Expect(inc.HasTaskErrors()).To(BeFalse())
 
 			duration := inc.ExecutionCompletedAt().Sub(inc.ExecutionStartedAt())
 			Expect(duration).To(BeNumerically(">=", 10*time.Second))

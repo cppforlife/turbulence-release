@@ -7,7 +7,6 @@ import (
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 
 	"github.com/cppforlife/turbulence/incident"
-	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/tasks"
 )
 
@@ -16,58 +15,36 @@ type IncidentImpl struct {
 	id     string
 }
 
-func (i *IncidentImpl) Wait() {
+func (i IncidentImpl) Wait() {
 	for len(i.fetch().ExecutionCompletedAt) == 0 {
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
-func (i *IncidentImpl) Tasks() []Task {
-	var ts []Task
-
-	for _, ev := range i.fetch().Events {
-		ts = append(ts, &TaskImpl{i.client, ev.ID})
-	}
-
-	return ts
-}
-
-func (i *IncidentImpl) TasksOfType(example tasks.Options) []Task {
+func (i IncidentImpl) TasksOfType(example tasks.Options) []Task {
 	var ts []Task
 
 	for _, ev := range i.fetch().Events {
 		if ev.Type == tasks.OptionsType(example) {
-			ts = append(ts, &TaskImpl{i.client, ev.ID})
+			ts = append(ts, TaskImpl{client: i.client, incidentID: i.id, id: ev.ID})
 		}
 	}
 
 	return ts
 }
 
-func (i *IncidentImpl) EventsOfType(example tasks.Options) []reporter.EventResponse {
-	var events []reporter.EventResponse
-
-	for _, ev := range i.fetch().Events {
-		if ev.Type == tasks.OptionsType(example) {
-			events = append(events, ev)
-		}
-	}
-
-	return events
-}
-
-func (i *IncidentImpl) HasEventErrors() bool {
+func (i IncidentImpl) HasTaskErrors() bool {
 	return i.fetch().HasEventErrors()
 }
 
-func (i *IncidentImpl) ExecutionStartedAt() time.Time {
+func (i IncidentImpl) ExecutionStartedAt() time.Time {
 	t, err := time.Parse(time.RFC3339, i.fetch().ExecutionStartedAt)
 	panicIfErr(err, "parse incident's execution start time")
 
 	return t
 }
 
-func (i *IncidentImpl) ExecutionCompletedAt() *time.Time {
+func (i IncidentImpl) ExecutionCompletedAt() *time.Time {
 	resp := i.fetch()
 
 	if len(resp.ExecutionCompletedAt) == 0 {
@@ -80,7 +57,7 @@ func (i *IncidentImpl) ExecutionCompletedAt() *time.Time {
 	return &t
 }
 
-func (i *IncidentImpl) fetch() incident.Response {
+func (i IncidentImpl) fetch() incident.Response {
 	resp, err := i.client.GetIncident(i.id)
 	panicIfErr(err, "fetch incident response")
 

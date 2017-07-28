@@ -41,13 +41,13 @@ var _ = Describe("Kill", func() {
 			inc := client.CreateIncident(req)
 			inc.Wait()
 
-			Expect(inc.HasEventErrors()).To(BeFalse())
+			Expect(inc.HasTaskErrors()).To(BeFalse())
 
-			events := inc.EventsOfType(tubtasks.KillOptions{})
-			Expect(events).To(HaveLen(4))
+			tasks := inc.TasksOfType(tubtasks.KillOptions{})
+			Expect(tasks).To(HaveLen(4))
 
-			for _, ev := range events {
-				Expect(ev.Instance.AZ).To(Equal("z1"))
+			for _, t := range tasks {
+				Expect(t.Instance().AZ).To(Equal("z1"))
 			}
 		}
 	})
