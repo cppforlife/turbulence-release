@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"strconv"
+	"time"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
@@ -27,13 +28,16 @@ func (StressOptions) _private() {}
 type StressTask struct {
 	cmdRunner boshsys.CmdRunner
 	opts      StressOptions
+
+	logTag string
+	logger boshlog.Logger
 }
 
-func NewStressTask(cmdRunner boshsys.CmdRunner, opts StressOptions, _ boshlog.Logger) StressTask {
-	return StressTask{cmdRunner, opts}
+func NewStressTask(cmdRunner boshsys.CmdRunner, opts StressOptions, logger boshlog.Logger) StressTask {
+	return StressTask{cmdRunner, opts, "task.StressTask", logger}
 }
 
-func (t StressTask) Execute() error {
+func (t StressTask) Execute(stopCh chan struct{}) error {
 	// e.g. stress --cpu 2 --io 1 --vm 1 --vm-bytes 128M --timeout 10s --verbose
 
 	args := []string{"--verbose"}
@@ -74,13 +78,50 @@ func (t StressTask) Execute() error {
 		)
 	}
 
+	// todo remove timeout option?
 	if len(t.opts.Timeout) > 0 {
 		args = append(args, "--timeout", t.opts.Timeout)
 	}
 
-	_, _, _, err := t.cmdRunner.RunCommand("stress", args...)
+	return t.runStress(args, stopCh)
+}
+
+func (t StressTask) runStress(args []string, stopCh chan struct{}) error {
+	command := boshsys.Command{
+		Name: "stress",
+		Args: args,
+	}
+
+	process, err := t.cmdRunner.RunComplexCommandAsync(command)
 	if err != nil {
 		return bosherr.WrapError(err, "Shelling out to stress")
+	}
+
+	var result boshsys.Result
+
+	isStopped := false
+
+	// Can only wait once on a process but cancelling can happen multiple times
+	for procExitedCh := process.Wait(); procExitedCh != nil; {
+		select {
+		case result = <-procExitedCh:
+			procExitedCh = nil
+		case <-stopCh:
+			// Ignore possible TerminateNicely error since we cannot return it
+			err := process.TerminateNicely(10 * time.Second)
+			if err != nil {
+				t.logger.Error(t.logTag, "Failed to terminate %s", err.Error())
+			}
+			isStopped = true
+		}
+	}
+
+	if isStopped {
+		return nil // todo successfully stopped?
+	}
+
+	if result.Error != nil {
+		return bosherr.WrapError(result.Error, "Running stress")
 	}
 
 	return nil

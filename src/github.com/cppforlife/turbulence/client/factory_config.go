@@ -2,11 +2,8 @@ package client
 
 import (
 	"crypto/x509"
-	gonet "net"
-	gourl "net/url"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/cloudfoundry/bosh-utils/crypto"
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
@@ -22,45 +19,7 @@ type Config struct {
 	CACert string
 }
 
-func NewConfigFromURL(url string) (Config, error) {
-	if len(url) == 0 {
-		return Config{}, bosherr.Error("Expected non-empty Turbulence API URL")
-	}
-
-	parsedURL, err := gourl.Parse(url)
-	if err != nil {
-		return Config{}, bosherr.WrapErrorf(err, "Parsing Turbulence API URL '%s'", url)
-	}
-
-	host := parsedURL.Host
-	port := 443
-
-	if len(host) == 0 {
-		host = url
-	}
-
-	if strings.Contains(host, ":") {
-		var portStr string
-
-		host, portStr, err = gonet.SplitHostPort(host)
-		if err != nil {
-			return Config{}, bosherr.WrapErrorf(err, "Extracting host/port from URL '%s'", url)
-		}
-
-		port, err = strconv.Atoi(portStr)
-		if err != nil {
-			return Config{}, bosherr.WrapErrorf(err, "Extracting port from URL '%s'", url)
-		}
-	}
-
-	if len(host) == 0 {
-		return Config{}, bosherr.Errorf("Expected to extract host from URL '%s'", url)
-	}
-
-	return Config{Host: host, Port: port}, nil
-}
-
-func NewConfigFromEnv() (Config, error) {
+func NewConfigFromEnv() Config {
 	port := 443
 	portStr := os.Getenv("TURBULENCE_PORT")
 
@@ -68,9 +27,7 @@ func NewConfigFromEnv() (Config, error) {
 		var err error
 
 		port, err = strconv.Atoi(portStr)
-		if err != nil {
-			return Config{}, bosherr.WrapErrorf(err, "Extracting port")
-		}
+		panicIfErr(err, "extract port from env variable")
 	}
 
 	config := Config{
@@ -83,7 +40,7 @@ func NewConfigFromEnv() (Config, error) {
 		CACert: os.Getenv("TURBULENCE_CA_CERT"),
 	}
 
-	return config, nil
+	return config
 }
 
 func (c Config) Validate() error {

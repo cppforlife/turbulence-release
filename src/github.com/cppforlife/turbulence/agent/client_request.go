@@ -19,6 +19,34 @@ type clientRequest struct {
 	logger boshlog.Logger
 }
 
+func (r clientRequest) Get(path string, response interface{}) error {
+	url := fmt.Sprintf("%s%s", r.endpoint, path)
+
+	resp, err := r.httpClient.Get(url)
+	if err != nil {
+		return bosherr.WrapErrorf(err, "Performing request GET '%s'", url)
+	}
+
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return bosherr.WrapError(err, "Reading response")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		msg := "Responded with non-successful status code '%d' response '%s'"
+		return bosherr.Errorf(msg, resp.StatusCode, respBody)
+	}
+
+	err = json.Unmarshal(respBody, &response)
+	if err != nil {
+		return bosherr.WrapError(err, "Unmarshaling response")
+	}
+
+	return nil
+}
+
 func (r clientRequest) Post(path string, body []byte, response interface{}) error {
 	url := fmt.Sprintf("%s%s", r.endpoint, path)
 

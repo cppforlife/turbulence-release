@@ -24,7 +24,7 @@ type Agent struct {
 }
 
 type agentTask interface {
-	Execute() error
+	Execute(stopCh chan struct{}) error
 }
 
 type AgentConfig struct {
@@ -87,10 +87,54 @@ func (a Agent) ContiniouslyExecuteTasks() error {
 func (a Agent) executeTask(task tasks.Task) {
 	a.logger.Debug(a.logTag, "Received agent task options '%#v'", task)
 
+	task1, err := a.buildAgentTask(task)
+
+	if task1 != nil && err == nil {
+		stopCh := make(chan struct{}, 1) // allow one stop
+		endPollCh := make(chan struct{}, 1)
+
+		go func() {
+			for {
+				select {
+				case <-endPollCh:
+					return
+				default:
+				}
+
+				resp, err := a.client.FetchTaskState(task.ID)
+				if err != nil {
+					a.logger.Error(a.logTag, "Failed fetching agent task control: %s", err.Error())
+				}
+
+				if resp.Stop {
+					close(stopCh)
+					return
+				}
+
+				time.Sleep(1 * time.Second)
+			}
+		}()
+
+		err = task1.Execute(stopCh)
+		if err != nil {
+			err = bosherr.WrapError(err, "Task execution")
+			a.logger.Error(a.logTag, "Failed executing agent task: %s", err.Error())
+		}
+
+		close(endPollCh)
+	}
+
+	err = a.client.RecordTaskResult(task.ID, err)
+	if err != nil {
+		a.logger.Error(a.logTag, "Failed updating agent task: %s", err.Error())
+	}
+}
+
+func (a Agent) buildAgentTask(task tasks.Task) (agentTask, error) {
 	var t agentTask
 	var err error
 
-	switch opts := task.Optionss[0].(type) {
+	switch opts := task.Options().(type) {
 	case tasks.KillProcessOptions:
 		monitClient, err := a.monitProvider.Get()
 		if err != nil {
@@ -119,16 +163,5 @@ func (a Agent) executeTask(task tasks.Task) {
 		a.logger.Error(a.logTag, "Ignoring unknown agent task '%T'", task.Optionss[0])
 	}
 
-	if t != nil {
-		err = t.Execute()
-		if err != nil {
-			err = bosherr.WrapError(err, "Task execution")
-			a.logger.Error(a.logTag, "Failed executing agent task: %s", err.Error())
-		}
-	}
-
-	err = a.client.UpdateTask(task.ID, err)
-	if err != nil {
-		a.logger.Error(a.logTag, "Failed updating agent task: %s", err.Error())
-	}
+	return t, err
 }

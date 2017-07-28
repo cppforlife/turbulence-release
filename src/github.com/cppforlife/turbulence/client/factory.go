@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"time"
 
-	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshhttp "github.com/cloudfoundry/bosh-utils/http"
 	boshhttpclient "github.com/cloudfoundry/bosh-utils/httpclient"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
@@ -24,18 +23,14 @@ func NewFactory(logger boshlog.Logger) Factory {
 	}
 }
 
-func (f Factory) New(config Config) (Turbulence, error) {
+func (f Factory) New(config Config) Turbulence {
 	err := config.Validate()
-	if err != nil {
-		return TurbulenceImpl{}, bosherr.WrapErrorf(err, "Validating Turbulence connection config")
-	}
+	panicIfErr(err, "validate config")
 
 	client, err := f.httpClient(config)
-	if err != nil {
-		return TurbulenceImpl{}, err
-	}
+	panicIfErr(err, "build http client")
 
-	return TurbulenceImpl{client: client}, nil
+	return TurbulenceImpl{client: client}
 }
 
 func (f Factory) httpClient(config Config) (Client, error) {

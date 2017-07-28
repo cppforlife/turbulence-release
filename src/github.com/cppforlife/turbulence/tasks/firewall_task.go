@@ -3,7 +3,6 @@ package tasks
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
@@ -42,10 +41,10 @@ func NewFirewallTask(
 	return FirewallTask{cmdRunner, opts, allowedOutputDest}
 }
 
-func (t FirewallTask) Execute() error {
-	timeout, err := time.ParseDuration(t.opts.Timeout)
+func (t FirewallTask) Execute(stopCh chan struct{}) error {
+	timeoutCh, err := NewOptionalTimeoutCh(t.opts.Timeout)
 	if err != nil {
-		return bosherr.WrapError(err, "Parsing timeout")
+		return err
 	}
 
 	rules := t.rules()
@@ -57,7 +56,10 @@ func (t FirewallTask) Execute() error {
 		}
 	}
 
-	<-time.After(timeout)
+	select {
+	case <-timeoutCh:
+	case <-stopCh:
+	}
 
 	for _, r := range rules {
 		err := t.iptables("-D", r)

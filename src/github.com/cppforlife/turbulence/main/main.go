@@ -153,7 +153,13 @@ func runControllers(controllerFactory ctrls.Factory, config Config, logger boshl
 	m.Post("/api/v1/scheduled_incidents", sisController.APICreate)
 	m.Delete("/api/v1/scheduled_incidents/:id", sisController.APIDelete)
 
+	// Agent watches for tasks based on agent ID
 	m.Post("/api/v1/agents/:id/tasks", controllerFactory.TasksController.APIConsume)
+	// Driver may change desired state of the task so that task ends
+	m.Post("/api/v1/agent_tasks/:id/state", controllerFactory.TasksController.APIUpdateState)
+	// Agent watches desired state of the task so that it can end it
+	m.Get("/api/v1/agent_tasks/:id/state", controllerFactory.TasksController.APIReadState)
+	// Once agent executes picked up task, its result is reported
 	m.Post("/api/v1/agent_tasks/:id", controllerFactory.TasksController.APIUpdate)
 
 	return http.ListenAndServeTLS(config.ListenAddr(), config.CertificatePath, config.PrivateKeyPath, m)

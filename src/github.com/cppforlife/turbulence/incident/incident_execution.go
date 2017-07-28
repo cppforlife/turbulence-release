@@ -99,7 +99,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 
 		task := tubtasks.Task{
 			ID:       event.ID,
-			Optionss: []tubtasks.Options{taskOpts},
+			Optionss: []tubtasks.Options{taskOpts}, // todo change to singular
 		}
 
 		tasks = append(tasks, task)

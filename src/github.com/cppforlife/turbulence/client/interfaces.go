@@ -8,13 +8,17 @@ import (
 	"github.com/cppforlife/turbulence/tasks"
 )
 
+// Turbulence client is designed to be test friendly
+// hence it does not return errors but rather panics.
 type Turbulence interface {
-	CreateIncident(incident.Request) (Incident, error)
+	CreateIncident(incident.Request) Incident
 }
 
 type Incident interface {
-	ID() string
-	Wait() error // todo add timeout?
+	Wait() // todo add timeout?
+
+	Tasks() []Task
+	TasksOfType(tasks.Options) []Task
 
 	// EventsOfType returns list events that match particular options type
 	// Example: incident.EventsOfType(tasks.KillOptions{})
@@ -27,3 +31,11 @@ type Incident interface {
 	ExecutionStartedAt() time.Time
 	ExecutionCompletedAt() *time.Time
 }
+
+var _ Incident = &IncidentImpl{}
+
+type Task interface {
+	Stop()
+}
+
+var _ Task = &TaskImpl{}

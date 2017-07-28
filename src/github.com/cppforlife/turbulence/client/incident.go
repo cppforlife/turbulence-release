@@ -14,30 +14,40 @@ import (
 type IncidentImpl struct {
 	client Client
 	id     string
-	resp   incident.Response
 }
 
-func (i *IncidentImpl) ID() string { return i.id }
+func (i *IncidentImpl) Wait() {
+	for len(i.fetch().ExecutionCompletedAt) == 0 {
+		time.Sleep(500 * time.Millisecond)
+	}
+}
 
-func (i *IncidentImpl) Wait() error {
-	for {
-		if len(i.resp.ExecutionCompletedAt) > 0 {
-			return nil
-		}
+func (i *IncidentImpl) Tasks() []Task {
+	var ts []Task
 
-		var err error
+	for _, ev := range i.fetch().Events {
+		ts = append(ts, &TaskImpl{i.client, ev.ID})
+	}
 
-		i.resp, err = i.client.GetIncident(i.id)
-		if err != nil {
-			return err
+	return ts
+}
+
+func (i *IncidentImpl) TasksOfType(example tasks.Options) []Task {
+	var ts []Task
+
+	for _, ev := range i.fetch().Events {
+		if ev.Type == tasks.OptionsType(example) {
+			ts = append(ts, &TaskImpl{i.client, ev.ID})
 		}
 	}
+
+	return ts
 }
 
 func (i *IncidentImpl) EventsOfType(example tasks.Options) []reporter.EventResponse {
 	var events []reporter.EventResponse
 
-	for _, ev := range i.resp.Events {
+	for _, ev := range i.fetch().Events {
 		if ev.Type == tasks.OptionsType(example) {
 			events = append(events, ev)
 		}
@@ -47,20 +57,34 @@ func (i *IncidentImpl) EventsOfType(example tasks.Options) []reporter.EventRespo
 }
 
 func (i *IncidentImpl) HasEventErrors() bool {
-	return i.resp.HasEventErrors()
+	return i.fetch().HasEventErrors()
 }
 
 func (i *IncidentImpl) ExecutionStartedAt() time.Time {
-	t, _ := time.Parse(time.RFC3339, i.resp.ExecutionStartedAt) // todo err check?
+	t, err := time.Parse(time.RFC3339, i.fetch().ExecutionStartedAt)
+	panicIfErr(err, "parse incident's execution start time")
+
 	return t
 }
 
 func (i *IncidentImpl) ExecutionCompletedAt() *time.Time {
-	if len(i.resp.ExecutionCompletedAt) == 0 {
+	resp := i.fetch()
+
+	if len(resp.ExecutionCompletedAt) == 0 {
 		return nil
 	}
-	t, _ := time.Parse(time.RFC3339, i.resp.ExecutionCompletedAt)
+
+	t, err := time.Parse(time.RFC3339, resp.ExecutionCompletedAt)
+	panicIfErr(err, "parse incident's execution completion time")
+
 	return &t
+}
+
+func (i *IncidentImpl) fetch() incident.Response {
+	resp, err := i.client.GetIncident(i.id)
+	panicIfErr(err, "fetch incident response")
+
+	return resp
 }
 
 func (c Client) GetIncident(id string) (incident.Response, error) {

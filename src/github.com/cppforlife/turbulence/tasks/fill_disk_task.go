@@ -9,6 +9,8 @@ import (
 type FillDiskOptions struct {
 	Type string
 
+	// todo to percentage
+
 	// By default root disk will be filled
 	Persistent bool
 	Ephemeral  bool
@@ -26,7 +28,7 @@ func NewFillDiskTask(cmdRunner boshsys.CmdRunner, opts FillDiskOptions, _ boshlo
 	return FillDiskTask{cmdRunner, opts}
 }
 
-func (t FillDiskTask) Execute() error {
+func (t FillDiskTask) Execute(stopCh chan struct{}) error {
 	if t.opts.Persistent {
 		return t.fill("/var/vcap/store/.filler")
 	}

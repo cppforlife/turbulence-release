@@ -20,12 +20,8 @@ var _ = Describe("Stress", func() {
 
 	BeforeEach(func() {
 		logger := boshlog.NewLogger(boshlog.LevelNone)
-
-		config, err := tubclient.NewConfigFromEnv()
-		Expect(err).ToNot(HaveOccurred())
-
-		client, err = tubclient.NewFactory(logger).New(config)
-		Expect(err).ToNot(HaveOccurred())
+		config := tubclient.NewConfigFromEnv()
+		client = tubclient.NewFactory(logger).New(config)
 	})
 
 	It("stresses dummy deployment's z2", func() {
@@ -50,11 +46,8 @@ var _ = Describe("Stress", func() {
 		}
 
 		{ // Check that execution of an invalid task returns an error
-			inc, err := client.CreateIncident(req)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = inc.Wait()
-			Expect(err).ToNot(HaveOccurred())
+			inc := client.CreateIncident(req)
+			inc.Wait()
 
 			Expect(inc.HasEventErrors()).To(BeTrue())
 
@@ -71,11 +64,8 @@ var _ = Describe("Stress", func() {
 		}
 
 		{ // Check that stress can succeed
-			inc, err := client.CreateIncident(req)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = inc.Wait()
-			Expect(err).ToNot(HaveOccurred())
+			inc := client.CreateIncident(req)
+			inc.Wait()
 
 			Expect(inc.HasEventErrors()).To(BeFalse())
 
@@ -84,6 +74,33 @@ var _ = Describe("Stress", func() {
 
 			duration := inc.ExecutionCompletedAt().Sub(inc.ExecutionStartedAt())
 			Expect(duration).To(BeNumerically(">=", 30*time.Second))
+		}
+
+		req.Tasks = tubtasks.OptionsSlice{
+			tubtasks.StressOptions{
+				NumCPUWorkers: 1,
+			},
+		}
+
+		{ // Check that stress can be stopped successfully
+			inc := client.CreateIncident(req)
+
+			time.Sleep(10 * time.Second)
+
+			tasks := inc.TasksOfType(tubtasks.StressOptions{})
+			Expect(tasks).To(HaveLen(1))
+
+			tasks[0].Stop()
+			inc.Wait()
+
+			Expect(inc.HasEventErrors()).To(BeFalse())
+
+			events := inc.EventsOfType(tubtasks.StressOptions{})
+			Expect(events).To(HaveLen(1))
+
+			duration := inc.ExecutionCompletedAt().Sub(inc.ExecutionStartedAt())
+			Expect(duration).To(BeNumerically(">=", 10*time.Second))
+			Expect(duration).To(BeNumerically("<=", 30*time.Second))
 		}
 	})
 })

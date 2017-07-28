@@ -18,12 +18,8 @@ var _ = Describe("Kill", func() {
 
 	BeforeEach(func() {
 		logger := boshlog.NewLogger(boshlog.LevelNone)
-
-		config, err := tubclient.NewConfigFromEnv()
-		Expect(err).ToNot(HaveOccurred())
-
-		client, err = tubclient.NewFactory(logger).New(config)
-		Expect(err).ToNot(HaveOccurred())
+		config := tubclient.NewConfigFromEnv()
+		client = tubclient.NewFactory(logger).New(config)
 	})
 
 	It("kills dummy deployment's z1", func() {
@@ -42,11 +38,8 @@ var _ = Describe("Kill", func() {
 		}
 
 		{ // Check that kill kills all z1 instances
-			inc, err := client.CreateIncident(req)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = inc.Wait()
-			Expect(err).ToNot(HaveOccurred())
+			inc := client.CreateIncident(req)
+			inc.Wait()
 
 			Expect(inc.HasEventErrors()).To(BeFalse())
 

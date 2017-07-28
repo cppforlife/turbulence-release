@@ -10,19 +10,16 @@ type TurbulenceImpl struct {
 	client Client
 }
 
-func (t TurbulenceImpl) CreateIncident(req incident.Request) (Incident, error) {
+func (t TurbulenceImpl) CreateIncident(req incident.Request) Incident {
 	resp, err := t.client.CreateIncident(req)
-	if err != nil {
-		return nil, err
-	}
+	panicIfErr(err, "create incident")
 
 	incident := &IncidentImpl{
 		client: t.client,
 		id:     resp.ID,
-		resp:   resp,
 	}
 
-	return incident, nil
+	return incident
 }
 
 func (c Client) CreateIncident(req incident.Request) (incident.Response, error) {

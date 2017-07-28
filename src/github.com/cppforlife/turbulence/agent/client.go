@@ -40,17 +40,30 @@ func (c Client) FetchTasks(agentID string) ([]tasks.Task, error) {
 	return resp, nil
 }
 
-func (c Client) UpdateTask(taskID string, err error) error {
+func (c Client) FetchTaskState(taskID string) (tasks.StateResponse, error) {
+	var resp tasks.StateResponse
+
+	path := fmt.Sprintf("/api/v1/agent_tasks/%s/state", taskID)
+
+	err := c.clientRequest.Get(path, &resp)
+	if err != nil {
+		return resp, bosherr.WrapErrorf(err, "Fetching task '%s' state", taskID)
+	}
+
+	return resp, nil
+}
+
+func (c Client) RecordTaskResult(taskID string, err error) error {
 	var resp interface{}
 
 	path := fmt.Sprintf("/api/v1/agent_tasks/%s", taskID)
-	taskReq := tasks.Request{}
+	req := tasks.ResultRequest{}
 
 	if err != nil {
-		taskReq.Error = err.Error()
+		req.Error = err.Error()
 	}
 
-	bytes, err := json.Marshal(taskReq)
+	bytes, err := json.Marshal(req)
 	if err != nil {
 		return bosherr.WrapErrorf(err, "Marshalling task")
 	}

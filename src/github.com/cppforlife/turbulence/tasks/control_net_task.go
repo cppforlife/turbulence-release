@@ -1,8 +1,6 @@
 package tasks
 
 import (
-	"time"
-
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
@@ -35,10 +33,10 @@ func NewControlNetTask(cmdRunner boshsys.CmdRunner, opts ControlNetOptions, _ bo
 	return ControlNetTask{cmdRunner, opts}
 }
 
-func (t ControlNetTask) Execute() error {
-	timeout, err := time.ParseDuration(t.opts.Timeout)
+func (t ControlNetTask) Execute(stopCh chan struct{}) error {
+	timeoutCh, err := NewOptionalTimeoutCh(t.opts.Timeout)
 	if err != nil {
-		return bosherr.WrapError(err, "Parsing timeout")
+		return err
 	}
 
 	if len(t.opts.Delay) == 0 && len(t.opts.Loss) == 0 {
@@ -80,7 +78,10 @@ func (t ControlNetTask) Execute() error {
 		}
 	}
 
-	<-time.After(timeout)
+	select {
+	case <-timeoutCh:
+	case <-stopCh:
+	}
 
 	for _, ifaceName := range ifaceNames {
 		err := t.resetIface(ifaceName)

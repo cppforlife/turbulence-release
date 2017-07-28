@@ -12,9 +12,12 @@ type repo struct {
 	inboxes     map[string]agentInbox
 	inboxesLock sync.RWMutex
 
-	tasks     map[string]Request
-	taskChs   map[string]chan struct{}
+	tasks     map[string]ResultRequest
 	tasksLock sync.RWMutex
+	taskChs   map[string]chan struct{}
+
+	taskStates     map[string]State
+	taskStatesLock sync.RWMutex
 
 	logTag string
 	logger boshlog.Logger
@@ -29,8 +32,10 @@ func NewRepo(logger boshlog.Logger) Repo {
 	return &repo{
 		inboxes: map[string]agentInbox{},
 
-		tasks:   map[string]Request{},
+		tasks:   map[string]ResultRequest{},
 		taskChs: map[string]chan struct{}{},
+
+		taskStates: map[string]State{},
 
 		logTag: "tasks.repo",
 		logger: logger,
@@ -69,6 +74,7 @@ func (r *repo) QueueAndWait(agentID string, tasks []Task) error {
 	case <-consumed:
 		r.logger.Debug(r.logTag, "Finished waiting since agent '%s' consumed tasks", agentID)
 		return nil
+
 	case <-time.After(30 * time.Second):
 		r.logger.Error(r.logTag, "Timed out waiting for agent '%s' to consume tasks", agentID)
 
@@ -117,16 +123,16 @@ func (r *repo) Consume(agentID string) ([]Task, error) {
 	return rec.tasks, nil
 }
 
-func (r *repo) Wait(taskID string) (Request, error) {
+func (r *repo) Wait(taskID string) (ResultRequest, error) {
 	if len(taskID) == 0 {
-		return Request{}, bosherr.Error("Must provide non-empty task ID")
+		return ResultRequest{}, bosherr.Error("Must provide non-empty task ID")
 	}
 
 	r.tasksLock.Lock()
 
 	ch, found := r.taskChs[taskID]
 	if !found {
-		return Request{}, bosherr.Error("Waiting must happen after queueing")
+		return ResultRequest{}, bosherr.Error("Waiting must happen after queueing")
 	}
 
 	r.tasksLock.Unlock()
@@ -140,7 +146,7 @@ func (r *repo) Wait(taskID string) (Request, error) {
 	return r.tasks[taskID], nil
 }
 
-func (r *repo) Update(taskID string, taskReq Request) error {
+func (r *repo) Update(taskID string, taskReq ResultRequest) error {
 	if len(taskID) == 0 {
 		return bosherr.Error("Must provide non-empty task ID")
 	}
@@ -156,12 +162,36 @@ func (r *repo) Update(taskID string, taskReq Request) error {
 		close(ch)
 
 		// Reset task
-		delete(r.taskChs, taskID)
+		// todo delete(r.taskChs, taskID) how to garbage collect
 
 		r.logger.Debug(r.logTag, "Updated task '%s'", taskID)
 	} else {
 		r.logger.Debug(r.logTag, "Did not wait for task '%s'", taskID)
 	}
+
+	return nil
+}
+
+func (r *repo) FetchState(taskID string) (State, error) {
+	if len(taskID) == 0 {
+		return State{}, bosherr.Error("Must provide non-empty task ID")
+	}
+
+	r.taskStatesLock.Lock()
+	defer r.taskStatesLock.Unlock()
+
+	return r.taskStates[taskID], nil
+}
+
+func (r *repo) UpdateState(taskID string, req StateRequest) error {
+	if len(taskID) == 0 {
+		return bosherr.Error("Must provide non-empty task ID")
+	}
+
+	r.taskStatesLock.Lock()
+	defer r.taskStatesLock.Unlock()
+
+	r.taskStates[taskID] = State{Stop: req.Stop}
 
 	return nil
 }

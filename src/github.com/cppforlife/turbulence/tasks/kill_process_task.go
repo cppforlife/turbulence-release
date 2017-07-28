@@ -45,7 +45,7 @@ func NewKillProcessTask(
 	return KillProcessTask{monitClient, cmdRunner, opts, "tasks.KillProcessTask", logger}
 }
 
-func (t KillProcessTask) Execute() error {
+func (t KillProcessTask) Execute(stopCh chan struct{}) error {
 	if len(t.opts.ProcessName) > 0 {
 		return t.killProcesses(t.opts.ProcessName)
 	}

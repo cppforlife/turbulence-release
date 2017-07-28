@@ -30,7 +30,7 @@ func NewShutdownTask(cmdRunner boshsys.CmdRunner, opts ShutdownOptions, _ boshlo
 	return ShutdownTask{cmdRunner, opts}
 }
 
-func (t ShutdownTask) Execute() error {
+func (t ShutdownTask) Execute(_ chan struct{}) error {
 	if t.opts.Crash {
 		return t.sysrq("c")
 	}
