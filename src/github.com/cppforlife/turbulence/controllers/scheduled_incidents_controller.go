@@ -67,7 +67,7 @@ func (c ScheduledIncidentsController) APIIndex(r martrend.Render) {
 }
 
 func (c ScheduledIncidentsController) APICreate(req *http.Request, r martrend.Render) {
-	var siReq scheduledinc.ScheduledIncidentReq
+	var siReq scheduledinc.ScheduledRequest
 
 	err := json.NewDecoder(req.Body).Decode(&siReq)
 	if err != nil {

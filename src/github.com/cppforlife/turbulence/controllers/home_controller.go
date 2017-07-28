@@ -55,7 +55,7 @@ func (c HomeController) Home(r martrend.Render) {
 	}
 
 	page := HomePage{
-		Incidents:          incident.NewIncidentsResp(is),
+		Incidents:          incident.NewResponses(is),
 		ScheduledIncidents: scheduledinc.NewScheduledIncidentsResp(sis),
 	}
 

@@ -2,7 +2,7 @@ package incident
 
 type Repo interface {
 	ListAll() ([]Incident, error)
-	Create(IncidentReq) (Incident, error)
+	Create(Request) (Incident, error)
 	Read(string) (Incident, error)
 }
 

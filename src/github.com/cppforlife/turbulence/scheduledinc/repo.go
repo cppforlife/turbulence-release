@@ -21,7 +21,7 @@ func (e ScheduledIncidentNotFoundError) Error() string {
 
 type Repo interface {
 	ListAll() ([]ScheduledIncident, error)
-	Create(ScheduledIncidentReq) (ScheduledIncident, error)
+	Create(ScheduledRequest) (ScheduledIncident, error)
 	Read(string) (ScheduledIncident, error)
 	Delete(string) error
 }
@@ -61,7 +61,7 @@ func (r *repo) ListAll() ([]ScheduledIncident, error) {
 	return r.sis, nil
 }
 
-func (r *repo) Create(req ScheduledIncidentReq) (ScheduledIncident, error) {
+func (r *repo) Create(req ScheduledRequest) (ScheduledIncident, error) {
 	uuid, err := r.uuidGen.Generate()
 	if err != nil {
 		return ScheduledIncident{}, bosherr.WrapError(err, "Generating scheduled incident ID")

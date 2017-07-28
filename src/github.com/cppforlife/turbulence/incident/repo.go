@@ -62,7 +62,7 @@ func (r *repo) ListAll() ([]Incident, error) {
 	return reversed, nil
 }
 
-func (r *repo) Create(req IncidentReq) (Incident, error) {
+func (r *repo) Create(req Request) (Incident, error) {
 	id, err := r.uuidGen.Generate()
 	if err != nil {
 		return Incident{}, bosherr.WrapError(err, "Generating incident ID")

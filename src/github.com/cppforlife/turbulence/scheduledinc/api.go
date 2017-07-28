@@ -7,16 +7,16 @@ import (
 	"github.com/cppforlife/turbulence/incident"
 )
 
-type ScheduledIncidentReq struct {
+type ScheduledRequest struct {
 	Schedule string
-	Incident incident.IncidentReq
+	Incident incident.Request
 }
 
 type ScheduledIncidentResp struct {
 	ID string
 
 	Schedule string
-	Incident incident.IncidentReq
+	Incident incident.Request
 }
 
 type ScheduledIncidentsResp []ScheduledIncidentResp

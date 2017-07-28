@@ -58,7 +58,7 @@ func (i Incident) TaskTypes() []string {
 }
 
 func (i Incident) ShortDescription() (string, error) {
-	b, err := json.Marshal(IncidentReq{i.Tasks, i.Selector})
+	b, err := json.Marshal(Request{i.Tasks, i.Selector})
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +67,7 @@ func (i Incident) ShortDescription() (string, error) {
 }
 
 func (i Incident) Description() (string, error) {
-	b, err := json.MarshalIndent(IncidentReq{i.Tasks, i.Selector}, "", "    ")
+	b, err := json.MarshalIndent(Request{i.Tasks, i.Selector}, "", "    ")
 	if err != nil {
 		return "", err
 	}

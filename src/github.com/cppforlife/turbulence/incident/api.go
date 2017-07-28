@@ -10,12 +10,12 @@ import (
 	"github.com/cppforlife/turbulence/tasks"
 )
 
-type IncidentReq struct {
+type Request struct {
 	Tasks    tasks.OptionsSlice
 	Selector selector.Req
 }
 
-type IncidentResp struct {
+type Response struct {
 	incident Incident
 
 	ID string
@@ -31,19 +31,19 @@ type IncidentResp struct {
 	description string
 }
 
-type IncidentsResp []IncidentResp
+type IncidentsResp []Response
 
-func NewIncidentsResp(incidents []Incident) IncidentsResp {
-	resp := []IncidentResp{}
+func NewResponses(incidents []Incident) IncidentsResp {
+	resp := []Response{}
 
 	for _, incid := range incidents {
-		resp = append(resp, NewIncidentResp(incid))
+		resp = append(resp, NewResponse(incid))
 	}
 
 	return resp
 }
 
-func NewIncidentResp(incident Incident) IncidentResp {
+func NewResponse(incident Incident) Response {
 	var eventResps []reporter.EventResp
 
 	for _, event := range incident.Events().Events() {
@@ -56,7 +56,7 @@ func NewIncidentResp(incident Incident) IncidentResp {
 		completedAt = incident.ExecutionCompletedAt().Format(time.RFC3339)
 	}
 
-	return IncidentResp{
+	return Response{
 		incident: incident,
 
 		ID: incident.ID(),
@@ -71,13 +71,13 @@ func NewIncidentResp(incident Incident) IncidentResp {
 	}
 }
 
-func (r IncidentResp) URL() string { return fmt.Sprintf("/incidents/%s", r.ID) }
+func (r Response) URL() string { return fmt.Sprintf("/incidents/%s", r.ID) }
 
-func (r IncidentResp) TaskTypes() string { return strings.Join(r.incident.TaskTypes(), ", ") }
+func (r Response) TaskTypes() string { return strings.Join(r.incident.TaskTypes(), ", ") }
 
-func (r IncidentResp) Description() (string, error) { return r.incident.Description() }
+func (r Response) Description() (string, error) { return r.incident.Description() }
 
-func (r IncidentResp) HasEventErrors() bool {
+func (r Response) HasEventErrors() bool {
 	for _, eventResp := range r.Events {
 		if len(eventResp.Error) > 0 {
 			return true

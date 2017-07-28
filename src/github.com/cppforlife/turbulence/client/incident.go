@@ -13,7 +13,7 @@ import (
 type IncidentImpl struct {
 	client Client
 	id     string
-	resp   incident.IncidentResp
+	resp   incident.Response
 }
 
 func (i *IncidentImpl) ID() string { return i.id }
@@ -49,8 +49,8 @@ func (i *IncidentImpl) HasEventErrors() bool {
 	return i.resp.HasEventErrors()
 }
 
-func (c Client) GetIncident(id string) (incident.IncidentResp, error) {
-	var resp incident.IncidentResp
+func (c Client) GetIncident(id string) (incident.Response, error) {
+	var resp incident.Response
 
 	err := c.clientRequest.Get(fmt.Sprintf("/api/v1/incidents/%s", id), &resp)
 	if err != nil {

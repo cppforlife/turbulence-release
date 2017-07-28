@@ -39,11 +39,11 @@ func NewIncidentsController(
 }
 
 type IncidentsPage struct {
-	Incidents []incident.IncidentResp
+	Incidents []incident.Response
 }
 
 type IncidentPage struct {
-	Incident incident.IncidentResp
+	Incident incident.Response
 }
 
 func (c IncidentsController) Index(req *http.Request, r martrend.Render) {
@@ -53,7 +53,7 @@ func (c IncidentsController) Index(req *http.Request, r martrend.Render) {
 		return
 	}
 
-	r.HTML(200, c.indexTmpl, IncidentsPage{incident.NewIncidentsResp(incidents)})
+	r.HTML(200, c.indexTmpl, IncidentsPage{incident.NewResponses(incidents)})
 }
 
 func (c IncidentsController) APIIndex(req *http.Request, r martrend.Render) {
@@ -63,11 +63,11 @@ func (c IncidentsController) APIIndex(req *http.Request, r martrend.Render) {
 		return
 	}
 
-	r.JSON(200, incident.NewIncidentsResp(incidents))
+	r.JSON(200, incident.NewResponses(incidents))
 }
 
 func (c IncidentsController) APICreate(req *http.Request, r martrend.Render) {
-	var incidentReq incident.IncidentReq
+	var incidentReq incident.Request
 
 	err := json.NewDecoder(req.Body).Decode(&incidentReq)
 	if err != nil {
@@ -81,7 +81,7 @@ func (c IncidentsController) APICreate(req *http.Request, r martrend.Render) {
 		return
 	}
 
-	r.JSON(200, incident.NewIncidentResp(incid))
+	r.JSON(200, incident.NewResponse(incid))
 }
 
 func (c IncidentsController) Read(req *http.Request, r martrend.Render, params mart.Params) {
@@ -96,7 +96,7 @@ func (c IncidentsController) Read(req *http.Request, r martrend.Render, params m
 		return
 	}
 
-	r.HTML(200, c.showTmpl, IncidentPage{incident.NewIncidentResp(incid)})
+	r.HTML(200, c.showTmpl, IncidentPage{incident.NewResponse(incid)})
 }
 
 func (c IncidentsController) APIRead(req *http.Request, r martrend.Render, params mart.Params) {
@@ -111,5 +111,5 @@ func (c IncidentsController) APIRead(req *http.Request, r martrend.Render, param
 		return
 	}
 
-	r.JSON(200, incident.NewIncidentResp(incid))
+	r.JSON(200, incident.NewResponse(incid))
 }

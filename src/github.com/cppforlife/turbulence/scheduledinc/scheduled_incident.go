@@ -16,7 +16,7 @@ type ScheduledIncident struct {
 
 	Schedule string
 
-	Incident incident.IncidentReq
+	Incident incident.Request
 }
 
 func (si ScheduledIncident) Execute() error {

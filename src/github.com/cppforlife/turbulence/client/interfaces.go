@@ -7,7 +7,7 @@ import (
 )
 
 type Turbulence interface {
-	CreateIncident(incident.IncidentReq) (Incident, error)
+	CreateIncident(incident.Request) (Incident, error)
 }
 
 type Incident interface {
