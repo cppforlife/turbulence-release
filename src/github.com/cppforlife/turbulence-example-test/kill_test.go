@@ -36,8 +36,7 @@ var _ = Describe("Kill", func() {
 				Deployment: &tubsel.NameRequest{Name: "dummy"},
 
 				AZ: &tubsel.NameRequest{
-					Name:  "z1",
-					Limit: tubsel.MustNewLimitFromString("100%"),
+					Name: "z1",
 				},
 			},
 		}
