@@ -57,6 +57,22 @@ var _ = Describe("Limit", func() {
 				})
 			})
 
+			Context("when specified limit is exactly half of available indices", func() {
+				Context("as number", func() {
+					It("returns half of available indices", func() {
+						limit := MustNewLimitFromString("1")
+						Expect(limit.Limit([]string{"1", "2"})).To(ConsistOfLen(1, []string{"1", "2"}))
+					})
+				})
+
+				Context("as percentage", func() {
+					It("returns half of available indices", func() {
+						limit := MustNewLimitFromString("50%")
+						Expect(limit.Limit([]string{"1", "2"})).To(ConsistOfLen(1, []string{"1", "2"}))
+					})
+				})
+			})
+
 			Context("when specified limit is same as number of available indices", func() {
 				Context("as number", func() {
 					It("returns all available indices", func() {
