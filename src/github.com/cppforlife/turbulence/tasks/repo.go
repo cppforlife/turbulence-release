@@ -8,21 +8,6 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 )
 
-type Task struct {
-	ID string
-
-	// todo cheating deserialization
-	Optionss TaskOptionsSlice
-}
-
-type Repo interface {
-	QueueAndWait(string, []Task) error
-	Consume(string) ([]Task, error)
-
-	Wait(string) (TaskReq, error)
-	Update(string, TaskReq) error
-}
-
 type repo struct {
 	inboxes     map[string]agentInbox
 	inboxesLock sync.RWMutex

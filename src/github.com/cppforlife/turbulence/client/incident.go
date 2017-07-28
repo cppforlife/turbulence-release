@@ -33,11 +33,11 @@ func (i *IncidentImpl) Wait() error {
 	}
 }
 
-func (i *IncidentImpl) EventsOfType(example tasks.TaskOptions) []reporter.EventResp {
+func (i *IncidentImpl) EventsOfType(example tasks.Options) []reporter.EventResp {
 	var events []reporter.EventResp
 
 	for _, ev := range i.resp.Events {
-		if ev.Type == tasks.TaskOptsType(example) {
+		if ev.Type == tasks.OptionsType(example) {
 			events = append(events, ev)
 		}
 	}

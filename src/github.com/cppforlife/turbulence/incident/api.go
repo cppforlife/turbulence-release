@@ -11,7 +11,7 @@ import (
 )
 
 type IncidentReq struct {
-	Tasks    tasks.TaskOptionsSlice
+	Tasks    tasks.OptionsSlice
 	Selector selector.Req
 }
 
@@ -20,7 +20,7 @@ type IncidentResp struct {
 
 	ID string
 
-	Tasks    tasks.TaskOptionsSlice
+	Tasks    tasks.OptionsSlice
 	Selector selector.Req
 
 	ExecutionStartedAt   string

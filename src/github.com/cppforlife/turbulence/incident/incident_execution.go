@@ -87,7 +87,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 	var events []*reporter.Event
 
 	for _, taskOpts := range i.Tasks {
-		eventTpl.Type = tubtasks.TaskOptsType(taskOpts)
+		eventTpl.Type = tubtasks.OptionsType(taskOpts)
 
 		event := i.events.Add(eventTpl)
 
@@ -98,7 +98,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 
 		task := tubtasks.Task{
 			ID:       event.ID,
-			Optionss: []tubtasks.TaskOptions{taskOpts},
+			Optionss: []tubtasks.Options{taskOpts},
 		}
 
 		tasks = append(tasks, task)
@@ -127,7 +127,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 }
 
 func (i Incident) killInstance(eventTpl reporter.Event, instance director.Instance) {
-	eventTpl.Type = tubtasks.TaskOptsType(tubtasks.KillOptions{})
+	eventTpl.Type = tubtasks.OptionsType(tubtasks.KillOptions{})
 
 	event := i.events.Add(eventTpl)
 

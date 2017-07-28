@@ -12,20 +12,13 @@ type TaskReq struct {
 	Error string
 }
 
-// TaskOptionsSlice is used for unmarshalling different source types
-type TaskOptionsSlice []TaskOptions
-
-type TaskOptions interface {
-	_private()
-}
-
-func TaskOptsType(taskOpts TaskOptions) string {
+func OptionsType(taskOpts Options) string {
 	t := fmt.Sprintf("%T", taskOpts)
 	t = strings.TrimPrefix(t, "tasks.")
 	return strings.TrimSuffix(t, "Options")
 }
 
-func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
+func (s *OptionsSlice) UnmarshalJSON(data []byte) error {
 	var maps []map[string]interface{}
 
 	err := json.Unmarshal(data, &maps)
@@ -40,34 +33,34 @@ func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
 				return bosherr.WrapErrorf(err, "Marshalling task options")
 			}
 
-			var opts TaskOptions
+			var opts Options
 
 			switch {
-			case optType == TaskOptsType(KillOptions{}):
+			case optType == OptionsType(KillOptions{}):
 				var o KillOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == TaskOptsType(KillProcessOptions{}):
+			case optType == OptionsType(KillProcessOptions{}):
 				var o KillProcessOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == TaskOptsType(StressOptions{}):
+			case optType == OptionsType(StressOptions{}):
 				var o StressOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == TaskOptsType(ControlNetOptions{}):
+			case optType == OptionsType(ControlNetOptions{}):
 				var o ControlNetOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == TaskOptsType(FirewallOptions{}):
+			case optType == OptionsType(FirewallOptions{}):
 				var o FirewallOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == TaskOptsType(FillDiskOptions{}):
+			case optType == OptionsType(FillDiskOptions{}):
 				var o FillDiskOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
-			case optType == TaskOptsType(ShutdownOptions{}):
+			case optType == OptionsType(ShutdownOptions{}):
 				var o ShutdownOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
@@ -88,35 +81,35 @@ func (s *TaskOptionsSlice) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (s TaskOptionsSlice) MarshalJSON() ([]byte, error) {
+func (s OptionsSlice) MarshalJSON() ([]byte, error) {
 	for i, o := range s {
 		switch typedO := o.(type) {
 		case KillOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		case KillProcessOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		case StressOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		case ControlNetOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		case FirewallOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		case FillDiskOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		case ShutdownOptions:
-			typedO.Type = TaskOptsType(typedO)
+			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
 		default:
@@ -124,5 +117,5 @@ func (s TaskOptionsSlice) MarshalJSON() ([]byte, error) {
 		}
 	}
 
-	return json.Marshal([]TaskOptions(s))
+	return json.Marshal([]Options(s))
 }

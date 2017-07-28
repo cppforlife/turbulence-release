@@ -20,7 +20,7 @@ type Incident struct {
 
 	id string
 
-	Tasks    tasks.TaskOptionsSlice
+	Tasks    tasks.OptionsSlice
 	Selector selector.Req
 
 	executionStartedAt   time.Time
@@ -51,7 +51,7 @@ func (i Incident) TaskTypes() []string {
 	var types []string
 
 	for _, taskOpts := range i.Tasks {
-		types = append(types, tasks.TaskOptsType(taskOpts))
+		types = append(types, tasks.OptionsType(taskOpts))
 	}
 
 	return types

@@ -14,6 +14,8 @@ type Incident interface {
 	ID() string
 	Wait() error // todo add timeout?
 
-	EventsOfType(tasks.TaskOptions) []reporter.EventResp
+	// EventsOfType returns list events that match particular options type
+	// Example: incident.EventsOfType(tasks.KillOptions{})
+	EventsOfType(tasks.Options) []reporter.EventResp
 	HasEventErrors() bool
 }
