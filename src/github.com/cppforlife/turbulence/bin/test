@@ -8,6 +8,7 @@ GOBIN=$bin go install github.com/onsi/ginkgo/ginkgo
 
 echo -e "\n Formatting packages..."
 go fmt github.com/cppforlife/turbulence/...
+go fmt github.com/cppforlife/turbulence-example-test/...
 let "result+=$?"
 
 echo -e "\n Testing packages..."

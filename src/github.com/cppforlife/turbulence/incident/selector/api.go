@@ -1,20 +1,20 @@
 package selector
 
-type Req struct {
+type Request struct {
 	IncludeMissing bool `json:",omitempty"`
 
-	AZ         *NameReq `json:",omitempty"`
-	Deployment *NameReq `json:",omitempty"`
-	Group      *NameReq `json:",omitempty"`
-	ID         *IDReq   `json:",omitempty"`
+	AZ         *NameRequest `json:",omitempty"`
+	Deployment *NameRequest `json:",omitempty"`
+	Group      *NameRequest `json:",omitempty"`
+	ID         *IDRequest   `json:",omitempty"`
 }
 
-type NameReq struct {
+type NameRequest struct {
 	Name  string
 	Limit Limit `json:",omitempty"`
 }
 
-type IDReq struct {
+type IDRequest struct {
 	Values []string `json:",omitempty"`
 	Limit  Limit    `json:",omitempty"`
 }
@@ -24,7 +24,7 @@ type IDReq struct {
 // todo PersistentDisk
 // todo Bootstrap
 
-func (a Req) AsSelector() Selector {
+func (a Request) AsSelector() Selector {
 	selectors := []Selector{}
 
 	// By default we avoid running any tasks against instances without VMs

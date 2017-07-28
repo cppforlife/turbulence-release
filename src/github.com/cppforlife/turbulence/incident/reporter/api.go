@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type EventResp struct {
+type EventResponse struct {
 	event *Event
 
 	ID   string
@@ -27,14 +27,14 @@ type EventInstanceResp struct {
 	AZ         string
 }
 
-func NewEventResp(event *Event) EventResp {
+func NewEventResponse(event *Event) EventResponse {
 	var completedAt string
 
 	if (event.ExecutionCompletedAt != time.Time{}) {
 		completedAt = event.ExecutionCompletedAt.Format(time.RFC3339)
 	}
 
-	return EventResp{
+	return EventResponse{
 		event: event,
 
 		ID:   event.ID,
@@ -54,9 +54,9 @@ func NewEventResp(event *Event) EventResp {
 	}
 }
 
-func (r EventResp) IsAction() bool { return r.event.IsAction() }
+func (r EventResponse) IsAction() bool { return r.event.IsAction() }
 
-func (r EventResp) DescriptionHTML() template.HTML {
+func (r EventResponse) DescriptionHTML() template.HTML {
 	content := ""
 
 	if len(r.Instance.ID) > 0 {

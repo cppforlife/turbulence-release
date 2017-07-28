@@ -36,7 +36,7 @@ var _ = Describe("Limit", func() {
 	}
 }`
 
-			var req Req
+			var req Request
 
 			err := json.Unmarshal([]byte(str), &req)
 			Expect(err).ToNot(HaveOccurred())
@@ -60,7 +60,7 @@ var _ = Describe("Limit", func() {
 		It("supports wildcards", func() {
 			str := `{ "Deployment": { "Name": "*-dep1-*" } }`
 
-			var req Req
+			var req Request
 
 			err := json.Unmarshal([]byte(str), &req)
 			Expect(err).ToNot(HaveOccurred())

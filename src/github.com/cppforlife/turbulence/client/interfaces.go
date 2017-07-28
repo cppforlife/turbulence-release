@@ -16,6 +16,6 @@ type Incident interface {
 
 	// EventsOfType returns list events that match particular options type
 	// Example: incident.EventsOfType(tasks.KillOptions{})
-	EventsOfType(tasks.Options) []reporter.EventResp
+	EventsOfType(tasks.Options) []reporter.EventResponse
 	HasEventErrors() bool
 }

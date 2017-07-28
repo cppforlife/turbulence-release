@@ -21,7 +21,7 @@ type Incident struct {
 	id string
 
 	Tasks    tasks.OptionsSlice
-	Selector selector.Req
+	Selector selector.Request
 
 	executionStartedAt   time.Time
 	executionCompletedAt time.Time

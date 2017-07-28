@@ -12,7 +12,7 @@ import (
 
 type Request struct {
 	Tasks    tasks.OptionsSlice
-	Selector selector.Req
+	Selector selector.Request
 }
 
 type Response struct {
@@ -21,12 +21,12 @@ type Response struct {
 	ID string
 
 	Tasks    tasks.OptionsSlice
-	Selector selector.Req
+	Selector selector.Request
 
 	ExecutionStartedAt   string
 	ExecutionCompletedAt string
 
-	Events []reporter.EventResp
+	Events []reporter.EventResponse
 
 	description string
 }
@@ -44,10 +44,10 @@ func NewResponses(incidents []Incident) IncidentsResp {
 }
 
 func NewResponse(incident Incident) Response {
-	var eventResps []reporter.EventResp
+	var eventResps []reporter.EventResponse
 
 	for _, event := range incident.Events().Events() {
-		eventResps = append(eventResps, reporter.NewEventResp(event))
+		eventResps = append(eventResps, reporter.NewEventResponse(event))
 	}
 
 	var completedAt string
