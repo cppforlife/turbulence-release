@@ -39,11 +39,11 @@ func NewScheduledIncidentsController(
 }
 
 type ScheduledIncidentsPage struct {
-	ScheduledIncidents []scheduledinc.ScheduledIncidentResp
+	ScheduledIncidents []scheduledinc.Response
 }
 
 type ScheduledIncidentPage struct {
-	ScheduledIncident scheduledinc.ScheduledIncidentResp
+	ScheduledIncident scheduledinc.Response
 }
 
 func (c ScheduledIncidentsController) Index(r martrend.Render) {
@@ -53,7 +53,7 @@ func (c ScheduledIncidentsController) Index(r martrend.Render) {
 		return
 	}
 
-	r.HTML(200, c.indexTmpl, ScheduledIncidentsPage{scheduledinc.NewScheduledIncidentsResp(sis)})
+	r.HTML(200, c.indexTmpl, ScheduledIncidentsPage{scheduledinc.NewResponses(sis)})
 }
 
 func (c ScheduledIncidentsController) APIIndex(r martrend.Render) {
@@ -63,11 +63,11 @@ func (c ScheduledIncidentsController) APIIndex(r martrend.Render) {
 		return
 	}
 
-	r.JSON(200, scheduledinc.NewScheduledIncidentsResp(sis))
+	r.JSON(200, scheduledinc.NewResponses(sis))
 }
 
 func (c ScheduledIncidentsController) APICreate(req *http.Request, r martrend.Render) {
-	var siReq scheduledinc.ScheduledRequest
+	var siReq scheduledinc.Request
 
 	err := json.NewDecoder(req.Body).Decode(&siReq)
 	if err != nil {
@@ -81,14 +81,14 @@ func (c ScheduledIncidentsController) APICreate(req *http.Request, r martrend.Re
 		return
 	}
 
-	r.JSON(200, scheduledinc.NewScheduledIncidentResp(si))
+	r.JSON(200, scheduledinc.NewResponse(si))
 }
 
 func (c ScheduledIncidentsController) Read(r martrend.Render, params mart.Params) {
 	si, err := c.repo.Read(params["id"])
 	if err != nil {
 		code := 500
-		if _, ok := err.(scheduledinc.ScheduledIncidentNotFoundError); ok {
+		if _, ok := err.(scheduledinc.NotFoundError); ok {
 			code = 404
 		}
 
@@ -96,14 +96,14 @@ func (c ScheduledIncidentsController) Read(r martrend.Render, params mart.Params
 		return
 	}
 
-	r.HTML(200, c.showTmpl, ScheduledIncidentPage{scheduledinc.NewScheduledIncidentResp(si)})
+	r.HTML(200, c.showTmpl, ScheduledIncidentPage{scheduledinc.NewResponse(si)})
 }
 
 func (c ScheduledIncidentsController) APIRead(r martrend.Render, params mart.Params) {
 	si, err := c.repo.Read(params["id"])
 	if err != nil {
 		code := 500
-		if _, ok := err.(scheduledinc.ScheduledIncidentNotFoundError); ok {
+		if _, ok := err.(scheduledinc.NotFoundError); ok {
 			code = 404
 		}
 
@@ -111,7 +111,7 @@ func (c ScheduledIncidentsController) APIRead(r martrend.Render, params mart.Par
 		return
 	}
 
-	r.JSON(200, scheduledinc.NewScheduledIncidentResp(si))
+	r.JSON(200, scheduledinc.NewResponse(si))
 }
 
 func (c ScheduledIncidentsController) APIDelete(r martrend.Render, params mart.Params) {

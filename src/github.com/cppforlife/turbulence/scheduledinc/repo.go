@@ -11,24 +11,8 @@ import (
 	"github.com/cppforlife/turbulence/incident"
 )
 
-type ScheduledIncidentNotFoundError struct {
-	ID string
-}
-
-func (e ScheduledIncidentNotFoundError) Error() string {
+func (e NotFoundError) Error() string {
 	return fmt.Sprintf("Scheduled incident '%s' does not exist", e.ID)
-}
-
-type Repo interface {
-	ListAll() ([]ScheduledIncident, error)
-	Create(ScheduledRequest) (ScheduledIncident, error)
-	Read(string) (ScheduledIncident, error)
-	Delete(string) error
-}
-
-type RepoNotifier interface {
-	ScheduledIncidentWasCreated(ScheduledIncident)
-	ScheduledIncidentWasDeleted(ScheduledIncident)
 }
 
 type repo struct {
@@ -61,7 +45,7 @@ func (r *repo) ListAll() ([]ScheduledIncident, error) {
 	return r.sis, nil
 }
 
-func (r *repo) Create(req ScheduledRequest) (ScheduledIncident, error) {
+func (r *repo) Create(req Request) (ScheduledIncident, error) {
 	uuid, err := r.uuidGen.Generate()
 	if err != nil {
 		return ScheduledIncident{}, bosherr.WrapError(err, "Generating scheduled incident ID")
@@ -98,7 +82,7 @@ func (r *repo) Read(id string) (ScheduledIncident, error) {
 		}
 	}
 
-	return ScheduledIncident{}, ScheduledIncidentNotFoundError{ID: id}
+	return ScheduledIncident{}, NotFoundError{ID: id}
 }
 
 func (r *repo) Delete(id string) error {

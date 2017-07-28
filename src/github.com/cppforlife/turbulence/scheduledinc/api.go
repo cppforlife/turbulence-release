@@ -7,32 +7,32 @@ import (
 	"github.com/cppforlife/turbulence/incident"
 )
 
-type ScheduledRequest struct {
+type Request struct {
 	Schedule string
 	Incident incident.Request
 }
 
-type ScheduledIncidentResp struct {
+type Response struct {
 	ID string
 
 	Schedule string
 	Incident incident.Request
 }
 
-type ScheduledIncidentsResp []ScheduledIncidentResp
+type Responses []Response
 
-func NewScheduledIncidentsResp(sis []ScheduledIncident) ScheduledIncidentsResp {
-	resp := []ScheduledIncidentResp{}
+func NewResponses(sis []ScheduledIncident) Responses {
+	resp := []Response{}
 
 	for _, si := range sis {
-		resp = append(resp, NewScheduledIncidentResp(si))
+		resp = append(resp, NewResponse(si))
 	}
 
 	return resp
 }
 
-func NewScheduledIncidentResp(si ScheduledIncident) ScheduledIncidentResp {
-	return ScheduledIncidentResp{
+func NewResponse(si ScheduledIncident) Response {
+	return Response{
 		ID: si.ID,
 
 		Schedule: si.Schedule,
@@ -40,11 +40,11 @@ func NewScheduledIncidentResp(si ScheduledIncident) ScheduledIncidentResp {
 	}
 }
 
-func (r ScheduledIncidentResp) URL() string {
+func (r Response) URL() string {
 	return fmt.Sprintf("/scheduled_incidents/%s", r.ID)
 }
 
-func (r ScheduledIncidentResp) Description() (string, error) {
+func (r Response) Description() (string, error) {
 	b, err := json.MarshalIndent(r.Incident, "", "    ")
 	if err != nil {
 		return "", err

@@ -38,7 +38,7 @@ func NewHomeController(
 
 type HomePage struct {
 	Incidents          incident.IncidentsResp
-	ScheduledIncidents scheduledinc.ScheduledIncidentsResp
+	ScheduledIncidents scheduledinc.Responses
 }
 
 func (c HomeController) Home(r martrend.Render) {
@@ -56,7 +56,7 @@ func (c HomeController) Home(r martrend.Render) {
 
 	page := HomePage{
 		Incidents:          incident.NewResponses(is),
-		ScheduledIncidents: scheduledinc.NewScheduledIncidentsResp(sis),
+		ScheduledIncidents: scheduledinc.NewResponses(sis),
 	}
 
 	r.HTML(200, c.homeTmpl, page)
