@@ -41,19 +41,21 @@ var _ = Describe("Kill", func() {
 			},
 		}
 
-		inc, err := client.CreateIncident(req)
-		Expect(err).ToNot(HaveOccurred())
+		{ // Check that kill kills all z1 instances
+			inc, err := client.CreateIncident(req)
+			Expect(err).ToNot(HaveOccurred())
 
-		err = inc.Wait()
-		Expect(err).ToNot(HaveOccurred())
+			err = inc.Wait()
+			Expect(err).ToNot(HaveOccurred())
 
-		Expect(inc.HasEventErrors()).To(BeFalse())
+			Expect(inc.HasEventErrors()).To(BeFalse())
 
-		events := inc.EventsOfType(tubtasks.KillOptions{})
-		Expect(events).To(HaveLen(4))
+			events := inc.EventsOfType(tubtasks.KillOptions{})
+			Expect(events).To(HaveLen(4))
 
-		for _, ev := range events {
-			Expect(ev.Instance.AZ).To(Equal("z1"))
+			for _, ev := range events {
+				Expect(ev.Instance.AZ).To(Equal("z1"))
+			}
 		}
 	})
 })

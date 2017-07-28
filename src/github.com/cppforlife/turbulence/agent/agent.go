@@ -122,6 +122,7 @@ func (a Agent) executeTask(task tasks.Task) {
 	if t != nil {
 		err = t.Execute()
 		if err != nil {
+			err = bosherr.WrapError(err, "Task execution")
 			a.logger.Error(a.logTag, "Failed executing agent task: %s", err.Error())
 		}
 	}

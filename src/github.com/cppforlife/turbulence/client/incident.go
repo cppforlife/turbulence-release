@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"time"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 
@@ -47,6 +48,19 @@ func (i *IncidentImpl) EventsOfType(example tasks.Options) []reporter.EventRespo
 
 func (i *IncidentImpl) HasEventErrors() bool {
 	return i.resp.HasEventErrors()
+}
+
+func (i *IncidentImpl) ExecutionStartedAt() time.Time {
+	t, _ := time.Parse(time.RFC3339, i.resp.ExecutionStartedAt) // todo err check?
+	return t
+}
+
+func (i *IncidentImpl) ExecutionCompletedAt() *time.Time {
+	if len(i.resp.ExecutionCompletedAt) == 0 {
+		return nil
+	}
+	t, _ := time.Parse(time.RFC3339, i.resp.ExecutionCompletedAt)
+	return &t
 }
 
 func (c Client) GetIncident(id string) (incident.Response, error) {

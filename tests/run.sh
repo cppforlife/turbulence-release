@@ -10,6 +10,7 @@ bosh -n upload-stemcell "https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu
 
 echo "-----> `date`: Delete previous deployment"
 bosh -n -d turbulence delete-deployment --force
+rm -f creds.yml
 
 echo "-----> `date`: Deploy"
 ( set -e; cd ./..; 

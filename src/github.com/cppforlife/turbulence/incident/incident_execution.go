@@ -1,6 +1,7 @@
 package incident
 
 import (
+	"errors"
 	"time"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
@@ -119,7 +120,10 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 
 		for _, event := range events {
 			go func() {
-				_, err := i.tasksRepo.Wait(event.ID)
+				req, err := i.tasksRepo.Wait(event.ID)
+				if err == nil && len(req.Error) > 0 {
+					err = errors.New(req.Error) // todo better error reporting?
+				}
 				i.events.RegisterResult(reporter.EventResult{event, err})
 			}()
 		}
