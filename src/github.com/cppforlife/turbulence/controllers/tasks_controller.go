@@ -43,7 +43,7 @@ func (c TasksController) APIConsume(req *http.Request, r martrend.Render, params
 }
 
 func (c TasksController) APIUpdate(req *http.Request, r martrend.Render, params mart.Params) {
-	var taskReq tasks.TaskReq
+	var taskReq tasks.Request
 
 	err := json.NewDecoder(req.Body).Decode(&taskReq)
 	if err != nil {

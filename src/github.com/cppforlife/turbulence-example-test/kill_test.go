@@ -28,7 +28,7 @@ var _ = Describe("Kill", func() {
 
   It("kills dummy deployment's z1", func() {
     req := tubinc.IncidentReq{
-      Tasks: tubtasks.TaskOptionsSlice{
+      Tasks: tubtasks.OptionsSlice{
         tubtasks.KillOptions{},
       },
 

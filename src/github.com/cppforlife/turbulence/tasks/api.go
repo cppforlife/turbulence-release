@@ -8,7 +8,7 @@ import (
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 )
 
-type TaskReq struct {
+type Request struct {
 	Error string
 }
 

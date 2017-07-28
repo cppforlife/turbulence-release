@@ -12,7 +12,7 @@ type repo struct {
 	inboxes     map[string]agentInbox
 	inboxesLock sync.RWMutex
 
-	tasks     map[string]TaskReq
+	tasks     map[string]Request
 	taskChs   map[string]chan struct{}
 	tasksLock sync.RWMutex
 
@@ -29,7 +29,7 @@ func NewRepo(logger boshlog.Logger) Repo {
 	return &repo{
 		inboxes: map[string]agentInbox{},
 
-		tasks:   map[string]TaskReq{},
+		tasks:   map[string]Request{},
 		taskChs: map[string]chan struct{}{},
 
 		logTag: "tasks.repo",
@@ -117,16 +117,16 @@ func (r *repo) Consume(agentID string) ([]Task, error) {
 	return rec.tasks, nil
 }
 
-func (r *repo) Wait(taskID string) (TaskReq, error) {
+func (r *repo) Wait(taskID string) (Request, error) {
 	if len(taskID) == 0 {
-		return TaskReq{}, bosherr.Error("Must provide non-empty task ID")
+		return Request{}, bosherr.Error("Must provide non-empty task ID")
 	}
 
 	r.tasksLock.Lock()
 
 	ch, found := r.taskChs[taskID]
 	if !found {
-		return TaskReq{}, bosherr.Error("Waiting must happen after queueing")
+		return Request{}, bosherr.Error("Waiting must happen after queueing")
 	}
 
 	r.tasksLock.Unlock()
@@ -140,7 +140,7 @@ func (r *repo) Wait(taskID string) (TaskReq, error) {
 	return r.tasks[taskID], nil
 }
 
-func (r *repo) Update(taskID string, taskReq TaskReq) error {
+func (r *repo) Update(taskID string, taskReq Request) error {
 	if len(taskID) == 0 {
 		return bosherr.Error("Must provide non-empty task ID")
 	}

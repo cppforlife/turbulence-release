@@ -44,8 +44,7 @@ func (c Client) UpdateTask(taskID string, err error) error {
 	var resp interface{}
 
 	path := fmt.Sprintf("/api/v1/agent_tasks/%s", taskID)
-
-	taskReq := tasks.TaskReq{}
+	taskReq := tasks.Request{}
 
 	if err != nil {
 		taskReq.Error = err.Error()

@@ -16,6 +16,6 @@ type Repo interface {
 	QueueAndWait(string, []Task) error
 	Consume(string) ([]Task, error)
 
-	Wait(string) (TaskReq, error)
-	Update(string, TaskReq) error
+	Wait(string) (Request, error)
+	Update(string, Request) error
 }
