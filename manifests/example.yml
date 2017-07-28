@@ -53,4 +53,6 @@ variables:
   options:
     ca: turbulence_api_ca
     common_name: ((turbulence_api_ip))
-    alternative_names: [((turbulence_api_ip))]
+    alternative_names:
+    - ((turbulence_api_ip))
+    - "*.api.default.turbulence.bosh" # todo
