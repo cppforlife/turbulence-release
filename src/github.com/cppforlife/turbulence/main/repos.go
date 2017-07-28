@@ -4,17 +4,17 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshuuid "github.com/cloudfoundry/bosh-utils/uuid"
 
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/director"
 	"github.com/cppforlife/turbulence/incident"
 	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/scheduledinc"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type Repos struct {
 	incidentsRepo          incident.Repo
 	scheduledIncidentsRepo scheduledinc.Repo
-	agentRequestsRepo      agentreqs.Repo
+	tasksRepo              tasks.Repo
 }
 
 func NewRepos(
@@ -25,14 +25,14 @@ func NewRepos(
 	scheduledIncidentNotifier scheduledinc.RepoNotifier,
 	logger boshlog.Logger,
 ) (Repos, error) {
-	agentRequestRepo := agentreqs.NewRepo(logger)
+	tasksRepo := tasks.NewRepo(logger)
 
 	incidentsRepo := incident.NewRepo(
 		uuidGen,
 		incidentNotifier,
 		reporter,
 		director,
-		agentRequestRepo,
+		tasksRepo,
 		logger,
 	)
 
@@ -43,9 +43,9 @@ func NewRepos(
 		logger,
 	)
 
-	return Repos{incidentsRepo, scheduledIncidentsRepo, agentRequestRepo}, nil
+	return Repos{incidentsRepo, scheduledIncidentsRepo, tasksRepo}, nil
 }
 
 func (r Repos) IncidentsRepo() incident.Repo              { return r.incidentsRepo }
 func (r Repos) ScheduledIncidentsRepo() scheduledinc.Repo { return r.scheduledIncidentsRepo }
-func (r Repos) AgentRequestsRepo() agentreqs.Repo         { return r.agentRequestsRepo }
+func (r Repos) TasksRepo() tasks.Repo                     { return r.tasksRepo }

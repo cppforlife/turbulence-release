@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/incident"
 	"github.com/cppforlife/turbulence/incident/reporter"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type Turbulence interface {
@@ -14,6 +14,6 @@ type Incident interface {
 	ID() string
 	Wait() error // todo add timeout?
 
-	EventsOfType(agentreqs.TaskOptions) []reporter.EventResp
+	EventsOfType(tasks.TaskOptions) []reporter.EventResp
 	HasEventErrors() bool
 }

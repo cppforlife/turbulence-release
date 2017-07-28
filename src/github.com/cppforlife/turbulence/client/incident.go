@@ -5,9 +5,9 @@ import (
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/incident"
 	"github.com/cppforlife/turbulence/incident/reporter"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type IncidentImpl struct {
@@ -33,11 +33,11 @@ func (i *IncidentImpl) Wait() error {
 	}
 }
 
-func (i *IncidentImpl) EventsOfType(example agentreqs.TaskOptions) []reporter.EventResp {
+func (i *IncidentImpl) EventsOfType(example tasks.TaskOptions) []reporter.EventResp {
 	var events []reporter.EventResp
 
 	for _, ev := range i.resp.Events {
-		if ev.Type == agentreqs.TaskOptsType(example) {
+		if ev.Type == tasks.TaskOptsType(example) {
 			events = append(events, ev)
 		}
 	}

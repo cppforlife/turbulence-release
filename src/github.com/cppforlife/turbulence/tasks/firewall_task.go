@@ -1,4 +1,4 @@
-package agentreqs
+package tasks
 
 import (
 	"fmt"

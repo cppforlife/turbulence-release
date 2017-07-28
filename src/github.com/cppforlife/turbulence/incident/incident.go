@@ -6,21 +6,21 @@ import (
 
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/director"
 	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/incident/selector"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type Incident struct {
-	director      director.Director
-	reporter      reporter.Reporter
-	agentReqsRepo agentreqs.Repo
-	updateFunc    func(Incident) error
+	director   director.Director
+	reporter   reporter.Reporter
+	tasksRepo  tasks.Repo
+	updateFunc func(Incident) error
 
 	id string
 
-	Tasks    agentreqs.TaskOptionsSlice
+	Tasks    tasks.TaskOptionsSlice
 	Selector selector.Req
 
 	executionStartedAt   time.Time
@@ -40,7 +40,7 @@ func (i Incident) ExecutionCompletedAt() time.Time { return i.executionCompleted
 
 func (i Incident) HasKillTask() bool {
 	for _, task := range i.Tasks {
-		if _, ok := task.(agentreqs.KillOptions); ok {
+		if _, ok := task.(tasks.KillOptions); ok {
 			return true
 		}
 	}
@@ -51,7 +51,7 @@ func (i Incident) TaskTypes() []string {
 	var types []string
 
 	for _, taskOpts := range i.Tasks {
-		types = append(types, agentreqs.TaskOptsType(taskOpts))
+		types = append(types, tasks.TaskOptsType(taskOpts))
 	}
 
 	return types

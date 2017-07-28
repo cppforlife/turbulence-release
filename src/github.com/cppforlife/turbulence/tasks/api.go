@@ -1,4 +1,4 @@
-package agentreqs
+package tasks
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ type TaskOptions interface {
 
 func TaskOptsType(taskOpts TaskOptions) string {
 	t := fmt.Sprintf("%T", taskOpts)
-	t = strings.TrimPrefix(t, "agentreqs.")
+	t = strings.TrimPrefix(t, "tasks.")
 	return strings.TrimSuffix(t, "Options")
 }
 

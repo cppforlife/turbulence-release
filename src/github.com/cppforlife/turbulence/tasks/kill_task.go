@@ -1,4 +1,4 @@
-package agentreqs
+package tasks
 
 // todo should not be an agent task
 type KillOptions struct {

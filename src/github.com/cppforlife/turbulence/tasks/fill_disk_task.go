@@ -1,4 +1,4 @@
-package agentreqs
+package tasks
 
 import (
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"

@@ -7,7 +7,7 @@ import (
   boshlog "github.com/cloudfoundry/bosh-utils/logger"
   tubclient "github.com/cppforlife/turbulence/client"
   tubinc "github.com/cppforlife/turbulence/incident"
-  tubtasks "github.com/cppforlife/turbulence/agentreqs"
+  tubtasks "github.com/cppforlife/turbulence/tasks"
   tubsel "github.com/cppforlife/turbulence/incident/selector"
 )
 

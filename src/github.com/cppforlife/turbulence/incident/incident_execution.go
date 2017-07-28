@@ -5,10 +5,10 @@ import (
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/director"
 	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/incident/selector"
+	tubtasks "github.com/cppforlife/turbulence/tasks"
 )
 
 func (i Incident) Execute() error {
@@ -83,11 +83,11 @@ func (i Incident) executeTasks() {
 }
 
 func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director.Instance) {
-	var tasks []agentreqs.Task
+	var tasks []tubtasks.Task
 	var events []*reporter.Event
 
 	for _, taskOpts := range i.Tasks {
-		eventTpl.Type = agentreqs.TaskOptsType(taskOpts)
+		eventTpl.Type = tubtasks.TaskOptsType(taskOpts)
 
 		event := i.events.Add(eventTpl)
 
@@ -96,9 +96,9 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 			continue
 		}
 
-		task := agentreqs.Task{
+		task := tubtasks.Task{
 			ID:       event.ID,
-			Optionss: []agentreqs.TaskOptions{taskOpts},
+			Optionss: []tubtasks.TaskOptions{taskOpts},
 		}
 
 		tasks = append(tasks, task)
@@ -106,7 +106,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 	}
 
 	go func() {
-		err := i.agentReqsRepo.QueueAndWait(instance.AgentID(), tasks)
+		err := i.tasksRepo.QueueAndWait(instance.AgentID(), tasks)
 		if err != nil {
 			i.logger.Error(i.logTag, "Failed to queue/wait for agent '%s': %s", instance.AgentID(), err.Error())
 
@@ -119,7 +119,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 
 		for _, event := range events {
 			go func() {
-				_, err := i.agentReqsRepo.Wait(event.ID)
+				_, err := i.tasksRepo.Wait(event.ID)
 				i.events.RegisterResult(reporter.EventResult{event, err})
 			}()
 		}
@@ -127,7 +127,7 @@ func (i Incident) executeNonKillTasks(eventTpl reporter.Event, instance director
 }
 
 func (i Incident) killInstance(eventTpl reporter.Event, instance director.Instance) {
-	eventTpl.Type = agentreqs.TaskOptsType(agentreqs.KillOptions{})
+	eventTpl.Type = tubtasks.TaskOptsType(tubtasks.KillOptions{})
 
 	event := i.events.Add(eventTpl)
 

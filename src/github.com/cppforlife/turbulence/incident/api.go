@@ -5,13 +5,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/incident/reporter"
 	"github.com/cppforlife/turbulence/incident/selector"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type IncidentReq struct {
-	Tasks    agentreqs.TaskOptionsSlice
+	Tasks    tasks.TaskOptionsSlice
 	Selector selector.Req
 }
 
@@ -20,7 +20,7 @@ type IncidentResp struct {
 
 	ID string
 
-	Tasks    agentreqs.TaskOptionsSlice
+	Tasks    tasks.TaskOptionsSlice
 	Selector selector.Req
 
 	ExecutionStartedAt   string

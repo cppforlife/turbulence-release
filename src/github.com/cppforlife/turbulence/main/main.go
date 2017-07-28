@@ -153,8 +153,8 @@ func runControllers(controllerFactory ctrls.Factory, config Config, logger boshl
 	m.Post("/api/v1/scheduled_incidents", sisController.APICreate)
 	m.Delete("/api/v1/scheduled_incidents/:id", sisController.APIDelete)
 
-	m.Post("/api/v1/agents/:id/tasks", controllerFactory.AgentRequestsController.APIConsume)
-	m.Post("/api/v1/agent_tasks/:id", controllerFactory.AgentRequestsController.APIUpdate)
+	m.Post("/api/v1/agents/:id/tasks", controllerFactory.TasksController.APIConsume)
+	m.Post("/api/v1/agent_tasks/:id", controllerFactory.TasksController.APIUpdate)
 
 	return http.ListenAndServeTLS(config.ListenAddr(), config.CertificatePath, config.PrivateKeyPath, m)
 }

@@ -8,9 +8,9 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshuuid "github.com/cloudfoundry/bosh-utils/uuid"
 
-	"github.com/cppforlife/turbulence/agentreqs"
 	"github.com/cppforlife/turbulence/director"
 	"github.com/cppforlife/turbulence/incident/reporter"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type IncidentNotFoundError struct {
@@ -22,11 +22,11 @@ func (e IncidentNotFoundError) Error() string {
 }
 
 type repo struct {
-	uuidGen       boshuuid.Generator
-	notifier      RepoNotifier
-	reporter      reporter.Reporter
-	director      director.Director
-	agentReqsRepo agentreqs.Repo
+	uuidGen   boshuuid.Generator
+	notifier  RepoNotifier
+	reporter  reporter.Reporter
+	director  director.Director
+	tasksRepo tasks.Repo
 
 	incidents     []Incident
 	incidentsLock sync.RWMutex
@@ -39,16 +39,16 @@ func NewRepo(
 	notifier RepoNotifier,
 	reporter reporter.Reporter,
 	director director.Director,
-	agentReqsRepo agentreqs.Repo,
+	tasksRepo tasks.Repo,
 	logger boshlog.Logger,
 ) Repo {
 	return &repo{
-		uuidGen:       uuidGen,
-		notifier:      notifier,
-		reporter:      reporter,
-		director:      director,
-		agentReqsRepo: agentReqsRepo,
-		logger:        logger,
+		uuidGen:   uuidGen,
+		notifier:  notifier,
+		reporter:  reporter,
+		director:  director,
+		tasksRepo: tasksRepo,
+		logger:    logger,
 	}
 }
 
@@ -69,10 +69,10 @@ func (r *repo) Create(req IncidentReq) (Incident, error) {
 	}
 
 	incident := Incident{
-		director:      r.director,
-		reporter:      r.reporter,
-		agentReqsRepo: r.agentReqsRepo,
-		updateFunc:    r.update,
+		director:   r.director,
+		reporter:   r.reporter,
+		tasksRepo:  r.tasksRepo,
+		updateFunc: r.update,
 
 		id: id,
 

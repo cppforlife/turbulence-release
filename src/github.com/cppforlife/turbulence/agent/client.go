@@ -8,7 +8,7 @@ import (
 	boshhttp "github.com/cloudfoundry/bosh-utils/httpclient"
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 
-	"github.com/cppforlife/turbulence/agentreqs"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
 type Client struct {
@@ -25,8 +25,8 @@ func NewClient(endpoint string, httpClient boshhttp.HTTPClient, logger boshlog.L
 	return Client{clientRequest: clientRequest}
 }
 
-func (c Client) FetchTasks(agentID string) ([]agentreqs.Task, error) {
-	var resp []agentreqs.Task
+func (c Client) FetchTasks(agentID string) ([]tasks.Task, error) {
+	var resp []tasks.Task
 
 	// todo use query string
 	// todo rename to agent_tasks
@@ -45,7 +45,7 @@ func (c Client) UpdateTask(taskID string, err error) error {
 
 	path := fmt.Sprintf("/api/v1/agent_tasks/%s", taskID)
 
-	taskReq := agentreqs.TaskReq{}
+	taskReq := tasks.TaskReq{}
 
 	if err != nil {
 		taskReq.Error = err.Error()

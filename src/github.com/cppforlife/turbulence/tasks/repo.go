@@ -1,4 +1,4 @@
-package agentreqs
+package tasks
 
 import (
 	"sync"
@@ -47,7 +47,7 @@ func NewRepo(logger boshlog.Logger) Repo {
 		tasks:   map[string]TaskReq{},
 		taskChs: map[string]chan struct{}{},
 
-		logTag: "agentreqs.repo",
+		logTag: "tasks.repo",
 		logger: logger,
 	}
 }

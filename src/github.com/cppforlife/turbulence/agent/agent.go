@@ -7,8 +7,8 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 
-	"github.com/cppforlife/turbulence/agentreqs"
-	"github.com/cppforlife/turbulence/agentreqs/monit"
+	"github.com/cppforlife/turbulence/tasks"
+	"github.com/cppforlife/turbulence/tasks/monit"
 )
 
 type Agent struct {
@@ -35,8 +35,8 @@ type AgentConfig struct {
 	BOSHMbusPort int
 }
 
-func (c AgentConfig) AllowedOutputDests() []agentreqs.FirewallTaskDest {
-	return []agentreqs.FirewallTaskDest{
+func (c AgentConfig) AllowedOutputDests() []tasks.FirewallTaskDest {
+	return []tasks.FirewallTaskDest{
 		{Host: c.APIHost, Port: c.APIPort},
 		{Host: c.BOSHMbusHost, Port: c.BOSHMbusPort, IsBOSHMbus: true},
 	}
@@ -84,35 +84,35 @@ func (a Agent) ContiniouslyExecuteTasks() error {
 	}
 }
 
-func (a Agent) executeTask(task agentreqs.Task) {
+func (a Agent) executeTask(task tasks.Task) {
 	a.logger.Debug(a.logTag, "Received agent task options '%#v'", task)
 
 	var t agentTask
 	var err error
 
 	switch opts := task.Optionss[0].(type) {
-	case agentreqs.KillProcessOptions:
+	case tasks.KillProcessOptions:
 		monitClient, err := a.monitProvider.Get()
 		if err != nil {
 			err = bosherr.WrapError(err, "Failed to retrieve monit client")
 		} else {
-			t = agentreqs.NewKillProcessTask(monitClient, a.cmdRunner, opts, a.logger)
+			t = tasks.NewKillProcessTask(monitClient, a.cmdRunner, opts, a.logger)
 		}
 
-	case agentreqs.StressOptions:
-		t = agentreqs.NewStressTask(a.cmdRunner, opts, a.logger)
+	case tasks.StressOptions:
+		t = tasks.NewStressTask(a.cmdRunner, opts, a.logger)
 
-	case agentreqs.ControlNetOptions:
-		t = agentreqs.NewControlNetTask(a.cmdRunner, opts, a.logger)
+	case tasks.ControlNetOptions:
+		t = tasks.NewControlNetTask(a.cmdRunner, opts, a.logger)
 
-	case agentreqs.FirewallOptions:
-		t = agentreqs.NewFirewallTask(a.cmdRunner, opts, a.agentConfig.AllowedOutputDests(), a.logger)
+	case tasks.FirewallOptions:
+		t = tasks.NewFirewallTask(a.cmdRunner, opts, a.agentConfig.AllowedOutputDests(), a.logger)
 
-	case agentreqs.FillDiskOptions:
-		t = agentreqs.NewFillDiskTask(a.cmdRunner, opts, a.logger)
+	case tasks.FillDiskOptions:
+		t = tasks.NewFillDiskTask(a.cmdRunner, opts, a.logger)
 
-	case agentreqs.ShutdownOptions:
-		t = agentreqs.NewShutdownTask(a.cmdRunner, opts, a.logger)
+	case tasks.ShutdownOptions:
+		t = tasks.NewShutdownTask(a.cmdRunner, opts, a.logger)
 
 	default:
 		err = bosherr.Errorf("Unknown agent task '%T'", task.Optionss[0])

@@ -8,32 +8,32 @@ import (
 	mart "github.com/go-martini/martini"
 	martrend "github.com/martini-contrib/render"
 
-	"github.com/cppforlife/turbulence/agentreqs"
+	"github.com/cppforlife/turbulence/tasks"
 )
 
-type AgentRequestsController struct {
-	agentRequestsRepo agentreqs.Repo
+type TasksController struct {
+	tasksRepo tasks.Repo
 
 	logTag string
 	logger boshlog.Logger
 }
 
-func NewAgentRequestsController(
-	agentRequestsRepo agentreqs.Repo,
+func NewTasksController(
+	tasksRepo tasks.Repo,
 	logger boshlog.Logger,
-) AgentRequestsController {
-	return AgentRequestsController{
-		agentRequestsRepo: agentRequestsRepo,
+) TasksController {
+	return TasksController{
+		tasksRepo: tasksRepo,
 
-		logTag: "AgentRequestsController",
+		logTag: "TasksController",
 		logger: logger,
 	}
 }
 
-func (c AgentRequestsController) APIConsume(req *http.Request, r martrend.Render, params mart.Params) {
+func (c TasksController) APIConsume(req *http.Request, r martrend.Render, params mart.Params) {
 	// agentID := req.URL.Query().Get("agent_id") todo use query string
 
-	tasks, err := c.agentRequestsRepo.Consume(params["id"])
+	tasks, err := c.tasksRepo.Consume(params["id"])
 	if err != nil {
 		r.JSON(500, map[string]string{"error": err.Error()})
 		return
@@ -42,8 +42,8 @@ func (c AgentRequestsController) APIConsume(req *http.Request, r martrend.Render
 	r.JSON(200, tasks)
 }
 
-func (c AgentRequestsController) APIUpdate(req *http.Request, r martrend.Render, params mart.Params) {
-	var taskReq agentreqs.TaskReq
+func (c TasksController) APIUpdate(req *http.Request, r martrend.Render, params mart.Params) {
+	var taskReq tasks.TaskReq
 
 	err := json.NewDecoder(req.Body).Decode(&taskReq)
 	if err != nil {
@@ -51,7 +51,7 @@ func (c AgentRequestsController) APIUpdate(req *http.Request, r martrend.Render,
 		return
 	}
 
-	err = c.agentRequestsRepo.Update(params["id"], taskReq)
+	err = c.tasksRepo.Update(params["id"], taskReq)
 	if err != nil {
 		r.JSON(500, map[string]string{"error": err.Error()})
 		return

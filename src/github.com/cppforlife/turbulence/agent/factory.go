@@ -12,7 +12,7 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 
-	"github.com/cppforlife/turbulence/agentreqs/monit"
+	"github.com/cppforlife/turbulence/tasks/monit"
 )
 
 type Factory struct {

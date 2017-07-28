@@ -1,4 +1,4 @@
-package agentreqs
+package tasks
 
 import (
 	"math/rand"
@@ -9,7 +9,7 @@ import (
 	boshlog "github.com/cloudfoundry/bosh-utils/logger"
 	boshsys "github.com/cloudfoundry/bosh-utils/system"
 
-	"github.com/cppforlife/turbulence/agentreqs/monit"
+	"github.com/cppforlife/turbulence/tasks/monit"
 )
 
 type KillProcessOptions struct {
@@ -42,7 +42,7 @@ func NewKillProcessTask(
 	opts KillProcessOptions,
 	logger boshlog.Logger,
 ) KillProcessTask {
-	return KillProcessTask{monitClient, cmdRunner, opts, "agentreqs.KillProcessTask", logger}
+	return KillProcessTask{monitClient, cmdRunner, opts, "tasks.KillProcessTask", logger}
 }
 
 func (t KillProcessTask) Execute() error {
