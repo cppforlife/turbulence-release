@@ -135,6 +135,9 @@ func (a Agent) buildAgentTask(task tasks.Task) (agentTask, error) {
 	var err error
 
 	switch opts := task.Options().(type) {
+	case tasks.NoopOptions:
+		t = tasks.NewNoopTask(opts)
+
 	case tasks.KillProcessOptions:
 		monitClient, err := a.monitProvider.Get()
 		if err != nil {

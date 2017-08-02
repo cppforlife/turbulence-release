@@ -159,6 +159,22 @@ Response:
 
 Currently there are four support task types that can be included in an incident. Some tasks require `Timeout` key to be set so that the task can complete.
 
+### Noop
+
+Does not do anything on selected instances. This may be used for testing selection logic or communication between agents and the API server.
+
+Optionally specify:
+
+- set `Stoppable` (bool) to true to control whether task will block until it's stopped via an API
+
+Example:
+
+```json
+{
+  "Type": "Noop"
+}
+```
+
 ### Kill
 
 Deletes the VM associated with an instance. API server uses newer Director API that is equivalent to using `bosh delete-vm VMCID` command.

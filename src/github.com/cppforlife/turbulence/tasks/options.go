@@ -32,6 +32,10 @@ func (s *OptionsSlice) UnmarshalJSON(data []byte) error {
 			var opts Options
 
 			switch {
+			case optType == OptionsType(NoopOptions{}):
+				var o NoopOptions
+				err, opts = json.Unmarshal(bytes, &o), o
+
 			case optType == OptionsType(KillOptions{}):
 				var o KillOptions
 				err, opts = json.Unmarshal(bytes, &o), o
@@ -80,6 +84,10 @@ func (s *OptionsSlice) UnmarshalJSON(data []byte) error {
 func (s OptionsSlice) MarshalJSON() ([]byte, error) {
 	for i, o := range s {
 		switch typedO := o.(type) {
+		case NoopOptions:
+			typedO.Type = OptionsType(typedO)
+			s[i] = typedO
+
 		case KillOptions:
 			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
