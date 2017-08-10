@@ -2,6 +2,7 @@ package director
 
 type Director interface {
 	AllInstances() ([]Instance, error)
+	SubmitEvent(EventOpts) error
 }
 
 type Instance interface {
@@ -14,4 +15,14 @@ type Instance interface {
 	HasVM() bool
 
 	DeleteVM() error
+}
+
+type EventOpts struct {
+	Action     string
+	ObjectType string
+	ObjectName string
+	Deployment string
+	Instance   string
+	Context    map[string]interface{}
+	Error      string
 }

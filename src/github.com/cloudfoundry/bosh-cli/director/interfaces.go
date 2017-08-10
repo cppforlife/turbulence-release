@@ -54,6 +54,8 @@ type Director interface {
 	EnableResurrection(bool) error
 	CleanUp(bool) error
 	DownloadResourceUnchecked(blobstoreID string, out io.Writer) error
+
+  SubmitEvent(EventOpts) error
 }
 
 type UploadFile interface {
@@ -285,4 +287,14 @@ type Event interface {
 	Instance() string
 	Context() map[string]interface{}
 	Error() string
+}
+
+type EventOpts struct {
+  Action     string
+  ObjectType string
+  ObjectName string
+  Deployment string
+  Instance   string
+  Context    map[string]interface{}
+  Error      string
 }

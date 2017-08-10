@@ -59,6 +59,8 @@ func main() {
 		ensureNoErr(logger, "Failed building director", err)
 	}
 
+	rep = reporter.NewMulti([]reporter.Reporter{reporter.NewDirectorEvents(dir), rep})
+
 	worker := incident.NewWorker(logger)
 
 	scheduler := scheduledinc.NewScheduler(logger)
