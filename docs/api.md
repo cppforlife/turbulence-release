@@ -107,6 +107,8 @@ Limits default to 100%. Name defaults to '*' and wildcard matches are supported.
 }
 ```
 
+See [docs/selector-examples.md](selector-examples.md) for additional options.
+
 ---
 ## Scheduled Incidents
 
