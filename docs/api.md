@@ -157,7 +157,7 @@ Response:
 ---
 ## Incident Tasks
 
-Currently there are four support task types that can be included in an incident. Some tasks require `Timeout` key to be set so that the task can complete.
+Currently there are eight support task types that can be included in an incident. Some tasks require `Timeout` key to be set so that the task can complete.
 
 ### Noop
 
