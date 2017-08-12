@@ -25,6 +25,11 @@ $ bosh int /tmp/turbulence.yml --path /turbulence_api_password
 ...
 ```
 
+Events emitted (found via `bosh events`):
+
+- actions: `start` or `end`, object type: `turbulence-incident`, object name: `<incident id>`
+- actions: `start` or `end`, object type: `turbulence-event`, object name: `<event id>`
+
 ## Agent configuration
 
 Agent job is configured to communicate with the API server. Communication is done over SSL with basic auth.

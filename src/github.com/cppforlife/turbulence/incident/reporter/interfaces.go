@@ -23,3 +23,7 @@ type Reporter interface {
 	ReportEventExecutionStart(string, Event)
 	ReportEventExecutionCompletion(string, Event)
 }
+
+var _ Reporter = Multi{}
+var _ Reporter = Logger{}
+var _ Reporter = DirectorEvents{}
