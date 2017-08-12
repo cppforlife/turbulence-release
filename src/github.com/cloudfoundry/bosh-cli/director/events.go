@@ -2,7 +2,9 @@ package director
 
 import (
 	"net/url"
+  "net/http"
 	"time"
+  "encoding/json"
 
 	bosherr "github.com/cloudfoundry/bosh-utils/errors"
 )
@@ -86,6 +88,10 @@ func (d DirectorImpl) Events(opts EventsFilter) ([]Event, error) {
 	return events, nil
 }
 
+func (d DirectorImpl) SubmitEvent(opts EventOpts) error {
+  return d.client.SubmitEvent(opts)
+}
+
 func (c Client) Events(opts EventsFilter) ([]EventResp, error) {
 	var events []EventResp
 
@@ -137,4 +143,32 @@ func (c Client) Events(opts EventsFilter) ([]EventResp, error) {
 	}
 
 	return events, nil
+}
+
+func (c Client) SubmitEvent(opts EventOpts) error {
+  body := map[string]interface{}{
+    "action":      opts.Action,
+    "object_type": opts.ObjectType,
+    "object_name": opts.ObjectName,
+    "deployment":  opts.Deployment,
+    "instance":    opts.Instance,
+    "context":     opts.Context,
+    "error":       opts.Error,
+  }
+
+  reqBody, err := json.Marshal(body)
+  if err != nil {
+    return bosherr.WrapErrorf(err, "Marshaling request body")
+  }
+
+  setHeaders := func(req *http.Request) {
+    req.Header.Add("Content-Type", "application/json")
+  }
+
+  _, _, err = c.clientRequest.RawPost("/events", reqBody, setHeaders)
+  if err != nil {
+    return bosherr.WrapErrorf(err, "Submitting event")
+  }
+
+  return nil
 }
