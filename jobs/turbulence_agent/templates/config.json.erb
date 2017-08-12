@@ -7,7 +7,7 @@ JSON.dump(
 
 	"API" => {
 		"Host" => api.p("advertised_host").empty? ? api.instances.first.address : api.p("advertised_host"),
-		"Port" => api.p("listen_port"),
+		"Port" => api.p("agent_listen_port"),
 		"CACert" => api.p("cert.ca"),
 		"Username" => api.p("username"),
 		"Password" => api.p("password"),

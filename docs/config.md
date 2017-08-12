@@ -1,10 +1,8 @@
 # Configuration
 
-Note: Turbulence release 0.5+ uses [BOSH links](https://bosh.io/docs/links.html).
-
 ## API server configuration
 
-API server job is configured to serve over SSL (required).
+API server job is configured to serve over SSL (required) on two ports (`listen_port` and `agent_listen_port` properties) for operator and agent APIs.
 
 Currently basic auth is used for UI and API access by an operator and agents, but we have plans to secure it via UAA integration (todo).
 

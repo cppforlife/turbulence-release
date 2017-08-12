@@ -12,8 +12,9 @@ import (
 )
 
 type Config struct {
-	ListenAddress string
-	ListenPort    int
+	ListenAddress   string
+	ListenPort      int
+	AgentListenPort int
 
 	Username string
 	Password string
@@ -51,6 +52,10 @@ func (c Config) ListenAddr() string {
 	return fmt.Sprintf("%s:%d", c.ListenAddress, c.ListenPort)
 }
 
+func (c Config) AgentListenAddr() string {
+	return fmt.Sprintf("%s:%d", c.ListenAddress, c.AgentListenPort)
+}
+
 func (c Config) Validate() error {
 	if len(c.ListenAddress) == 0 {
 		return bosherr.Error("Missing 'ListenAddress'")
@@ -58,6 +63,10 @@ func (c Config) Validate() error {
 
 	if c.ListenPort == 0 {
 		return bosherr.Error("Missing 'ListenPort'")
+	}
+
+	if c.ListenPort == 0 {
+		return bosherr.Error("Missing 'AgentListenPort'")
 	}
 
 	if len(c.Username) == 0 {

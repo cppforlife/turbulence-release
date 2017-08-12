@@ -14,8 +14,8 @@ provides:
 - name: api
   type: turbulence_api
   properties:
-  - listen_port
   - advertised_host
+  - agent_listen_port
   - cert
   - username
   - password
@@ -25,8 +25,11 @@ properties:
     description: "Address to listen on"
     default: "0.0.0.0"
   listen_port:
-    description: "Port to listen on"
+    description: "Operator API listen port"
     default: 8080
+  agent_listen_port:
+    description: "Agent API listen port"
+    default: 8081
 
   advertised_host:
     description: "Advertised hostname of the API server"
