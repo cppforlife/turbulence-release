@@ -65,7 +65,7 @@ func (c Config) Validate() error {
 		return bosherr.Error("Missing 'ListenPort'")
 	}
 
-	if c.ListenPort == 0 {
+	if c.AgentListenPort == 0 {
 		return bosherr.Error("Missing 'AgentListenPort'")
 	}
 
