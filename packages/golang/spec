@@ -1,7 +1,0 @@
----
-name: golang
-
-dependencies: []
-
-files:
-- golang/go1.6.2.linux-amd64.tar.gz

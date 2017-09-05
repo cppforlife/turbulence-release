@@ -2,7 +2,7 @@
 name: turbulence
 
 dependencies:
-- golang
+- golang-1.8-linux
 
 files:
 - "**/*.go"

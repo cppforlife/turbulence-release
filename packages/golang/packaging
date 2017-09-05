@@ -1,5 +1,0 @@
-set -e -x
-
-tar xzf golang/go1.6.2.linux-amd64.tar.gz
-
-mv go/* $BOSH_INSTALL_TARGET
