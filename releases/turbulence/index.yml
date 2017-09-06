@@ -15,6 +15,8 @@ builds:
     version: "0.9"
   b90d6398-ccda-4f64-5035-be1f8bbd741f:
     version: "0.5"
+  c747145a-e3c3-46de-68cd-04bed2cb800e:
+    version: 0.10.0
   faf38e36-021c-43d2-40f4-6550d1578c47:
     version: "0.6"
 format-version: "2"
