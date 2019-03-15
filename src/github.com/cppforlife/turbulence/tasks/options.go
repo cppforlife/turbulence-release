@@ -44,6 +44,10 @@ func (s *OptionsSlice) UnmarshalJSON(data []byte) error {
 				var o KillProcessOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
+			case optType == OptionsType(PauseProcessOptions{}):
+				var o PauseProcessOptions
+				err, opts = json.Unmarshal(bytes, &o), o
+
 			case optType == OptionsType(StressOptions{}):
 				var o StressOptions
 				err, opts = json.Unmarshal(bytes, &o), o
@@ -54,6 +58,14 @@ func (s *OptionsSlice) UnmarshalJSON(data []byte) error {
 
 			case optType == OptionsType(FirewallOptions{}):
 				var o FirewallOptions
+				err, opts = json.Unmarshal(bytes, &o), o
+
+			case optType == OptionsType(TargetedBlockerOptions{}):
+				var o TargetedBlockerOptions
+				err, opts = json.Unmarshal(bytes, &o), o
+
+			case optType == OptionsType(BlockDNSOptions{}):
+				var o BlockDNSOptions
 				err, opts = json.Unmarshal(bytes, &o), o
 
 			case optType == OptionsType(FillDiskOptions{}):
@@ -96,6 +108,10 @@ func (s OptionsSlice) MarshalJSON() ([]byte, error) {
 			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 
+		case PauseProcessOptions:
+			typedO.Type = OptionsType(typedO)
+			s[i] = typedO
+
 		case StressOptions:
 			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
@@ -105,6 +121,14 @@ func (s OptionsSlice) MarshalJSON() ([]byte, error) {
 			s[i] = typedO
 
 		case FirewallOptions:
+			typedO.Type = OptionsType(typedO)
+			s[i] = typedO
+
+		case TargetedBlockerOptions:
+			typedO.Type = OptionsType(typedO)
+			s[i] = typedO
+
+		case BlockDNSOptions:
 			typedO.Type = OptionsType(typedO)
 			s[i] = typedO
 

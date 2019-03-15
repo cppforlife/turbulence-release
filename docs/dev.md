@@ -15,8 +15,6 @@ Run `./update-deps` to update `github.com/cppforlife/turbulence` package depende
 - lock up whole machine
 - remount disk as readonly
 - corrupt disks
-- pause a process
-- restrict X% bandw
 
 https://www.kernel.org/doc/Documentation/sysrq.txt might be useful...
 http://blog.hut8labs.com/gorillas-before-monkeys.html
