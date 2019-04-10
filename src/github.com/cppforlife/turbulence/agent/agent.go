@@ -146,6 +146,9 @@ func (a Agent) buildAgentTask(task tasks.Task) (agentTask, error) {
 			t = tasks.NewKillProcessTask(monitClient, a.cmdRunner, opts, a.logger)
 		}
 
+	case tasks.PauseProcessOptions:
+		t = tasks.NewPauseProcessTask(a.cmdRunner, opts, a.logger)
+
 	case tasks.StressOptions:
 		t = tasks.NewStressTask(a.cmdRunner, opts, a.logger)
 
@@ -154,6 +157,12 @@ func (a Agent) buildAgentTask(task tasks.Task) (agentTask, error) {
 
 	case tasks.FirewallOptions:
 		t = tasks.NewFirewallTask(a.cmdRunner, opts, a.agentConfig.AllowedOutputDests(), a.logger)
+
+	case tasks.TargetedBlockerOptions:
+		t = tasks.NewTargetedBlockerTask(a.cmdRunner, opts, a.logger)
+
+	case tasks.BlockDNSOptions:
+		t = tasks.NewBlockDNSTask(a.cmdRunner, opts, a.logger)
 
 	case tasks.FillDiskOptions:
 		t = tasks.NewFillDiskTask(a.cmdRunner, opts, a.logger)

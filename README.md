@@ -1,6 +1,6 @@
-# Turbulence
+# Turbulence++
 
-Turbulence release is used for injecting different failure scenarios into a BOSH deployed system. Currently the following scenarios are supported:
+Turbulence++ release is used for injecting different failure scenarios into a BOSH deployed system. Currently the following scenarios are supported:
 
 - VM termination on BOSH supported IaaSes
 - impose CPU/RAM/IO load
@@ -16,8 +16,8 @@ Agent job is a daemon that periodically retrieves instructions from the API serv
 Next steps:
 
 - [Configuration doc](docs/config.md) on how to configure API server and agents
-- [API doc](docs/api.md) on how to use Turbulence
-- [API client doc](docs/client.md) on how to use Turbulence GO client
+- [API doc](docs/api.md) on how to use Turbulence++
+- [API client doc](docs/client.md) on how to use Turbulence++ GO client
 - [Development doc](docs/dev.md) on how to contribute
 
 --

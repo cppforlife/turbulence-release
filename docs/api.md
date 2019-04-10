@@ -84,7 +84,7 @@ Available selector rules:
   - set `Values` (array of strings; optional)
   - set `Limit` (string; optional)
 
-Limits default to 100%. Name defaults to '*' and wildcard matches are supported.
+Limits default to 100%. Name defaults to '\*' and wildcard matches are supported.
 
 ```json
 {
@@ -208,6 +208,25 @@ Example:
 }
 ```
 
+### Pause Process
+
+Pause one or more process on the VM associated with an instance.
+
+Configuration:
+
+- set `ProcessName`(string) to a pattern used with `pkill`
+- set `timeout` (string) to how long the process should remain paused. A valid timeout is required.
+
+Example:
+
+```json
+{
+	"Type": "PauseProcess",
+	"ProcessName": "sshd",
+	"Timeout": "10m" // Times may be suffixed with s,m,h,d,y
+}
+```
+
 ### Stress
 
 Stresses different subsystems on the VM associated with an instance.
@@ -263,6 +282,58 @@ Example:
 }
 ```
 
+### TargetedBlocker
+
+Drops incoming and or outgoing traffic from one or more VMs. It is able to target specific IPs and Ports to simulate the failure of specific services.
+
+Currently iptables is used for dropping packets from INPUT and OUTPUT chains.
+
+Target parameters:
+
+- set `Direction` (string; required) to the direction of traffic to drop, can be either "INPUT", "OUTPUT", or "FORWARD". If you are targeting diego-cells, then you will probably want "FORWARD".
+- set `SrcHost` (string) to either an IPv4 address such as "192.168.1.50" or with a mask such as "192.168.0.0/24", or to a domain name which will be resolved into (possibly multiple) IPs such as "example.com" using the dig command. If no host is specified, then all source hosts will be impacted.
+- set `DstHost` (string) to either an IPv4 address such as "192.168.1.50" or with a mask such as "192.168.0.0/24", or to a domain name which will be resolved into (possibly multiple) IPs such as "example.com" using the dig command. If no host is specified, then all destination hosts will be impacted.
+- set `Protocol` (string) to the protocol to drop traffic on, can be either "udp", "tcp", "icmp", or "all". Defaults to being unspecified.
+- set `DstPorts` (string) to the destination port to drop. This can be either a single port such as "8080" or a range such as "1503:1520". If blank, all destination ports will be dropped.
+- set `SrcPorts` (string) to the source ports to drop. This can be either a single port such as "8080" or a range such as "1503:1520". If blank, all source ports will be dropped.
+
+*Note*: at least one of `SrcHost`, `DstHost`, `DstPorts`, or `SrcPorts` must be specified.
+
+Example:
+
+```json
+{
+	"Type": "TargetedBlocker",
+	"Timeout": "10m", // Times may be suffixed with ms,s,m,h
+	"Targets": [{
+		"DstHost": "1.1.1.1",
+		"Direction": "INPUT",
+		"DstPorts": "53"
+	},{
+		"DstHost": "google.com",
+		"Direction": "FORWARD",
+		"Protocol": "tcp",
+		"DstPorts": "80"
+	}]
+}
+```
+
+
+### Block DNS
+
+Causes all outgoing DNS packets to be dropped.
+
+Currently iptables is used for dropping packets going out on tcp or udp port 53.
+
+Example:
+
+```json
+{
+	"Type": "BlockDNS",
+	"Timeout": "10m" // Times may be suffixed with ms,s,m,h
+}
+```
+
 ### Control Network
 
 Controls network quality on the VM associated with an instance. Does not affect `lo0`.
@@ -274,10 +345,29 @@ One or both of the following configurations must be selected:
 - packet delay
   - set `Delay` (string; required). Must be suffixed with `ms`.
   - set `DelayVariation` (string; optional). Must be suffixed with `ms`. Default is `10ms`.
+  - if `DelayVariation >= 0.5*Delay`, then packet reordering may occur.
 
 - packet loss
   - set `Loss` (string; required). Must be suffixed with `%`.
   - set `LossCorrelation` (string; optional). Must be suffixed with `%`. Default is `75%`.
+  
+- packet duplication
+  - set `Duplication` (string; required). Must be suffixed with `%`.
+  
+- packet corruption
+  - set `Corruption` (string; required). Must be suffixed with `%`.
+  
+- packet reordering
+  - set `Reorder` (string; required). Must be suffixed with `%`.
+  - set `ReorderCorrelation` (string; optional). Must be suffixed with `%`. Default is `50%`.
+  - if the `Delay` is less than the inter-packet arrival time, then no reordering will be observed.
+  
+- bandwidth limiting
+  - set `Bandwidth` (string; required). Must be suffixed with one of `kbps`, `mbps` or `gbps`.
+  - bandwidth limiting must be used without any other effects.
+
+In addition it is possible to apply a destination filter:
+  - set `Targets` (array, optional). Must include either `DstHost` or `DstPort`
 
 Example:
 
@@ -286,7 +376,14 @@ Example:
 	"Type": "ControlNet",
 	"Timeout": "10m", // Times may be suffixed with ms,s,m,h
 
-	"Delay": "50ms"
+	"Delay": "50ms",
+	
+	"Targets": [
+	  {
+		"DstHost": "1.2.3.4",
+		"DstHost": "443"
+	  }
+	]
 }
 ```
 
@@ -300,12 +397,14 @@ One of the following configurations must be selected:
 - set `Ephemeral` (bool) to fill up /var/vcap/data
 - set `Temporary` (bool) to fill up /tmp
 - by default uses root disk
+- if multiple are selected, the first one in the above order will be used.
 
 Example:
 
 ```json
 {
 	"Type": "FillDisk",
+	"Timeout": "10m", // Times may be suffixed with ms,s,m,h
 	"Persistent": true
 }
 ```

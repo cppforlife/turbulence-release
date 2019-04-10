@@ -7,6 +7,18 @@ import (
 )
 
 func NewOptionalTimeoutCh(timeoutStr string) (<-chan time.Time, error) {
+	return newTimeoutCh(timeoutStr, true)
+}
+
+func NewMandatoryTimeoutCh(timeoutStr string) (<- chan time.Time, error) {
+	return newTimeoutCh(timeoutStr, false)
+}
+
+func newTimeoutCh(timeoutStr string, optional bool) (<-chan time.Time, error) {
+	if optional && len(timeoutStr) == 0 {
+		return nil, bosherr.Error("Timeout must be specified.")
+	}
+
 	if len(timeoutStr) == 0 {
 		return make(chan time.Time), nil // never fires
 	}
