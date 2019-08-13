@@ -70,7 +70,8 @@ func (s *Scheduler) performCronReset() {
 
 	s.itemsLock.Lock()
 
-	for _, si := range s.items {
+	for i, _ := range s.items {
+		si := s.items[i]
 		s.cron.AddFunc(si.Schedule, func() {
 			err := si.Execute()
 			if err != nil {
